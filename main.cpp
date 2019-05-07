@@ -48,8 +48,12 @@ void Compiler::preprocessing()
     this->removeCom(line);
     this->capLet(line);
     this->expMacro(line);
-    this->equIf(line);
-    this->brokenLabel(line);
+    if(line.find(":")){
+      this->brokenLabel(line);
+    }
+    if(line.find("EQU", 0)){
+      this->equIf(line);
+    }
   }
 }
 
