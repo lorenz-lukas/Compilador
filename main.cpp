@@ -17,11 +17,9 @@ class Compiler
       void capLet();
       void expMacro();
       void equIf();
+      void brokenLabel();
     void firstPass();
     void secondPass();
-
-
-    void preprocessing();
     std::vector<string> codeRaw, code;
 };
 
