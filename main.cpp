@@ -13,6 +13,13 @@ class Compiler
     //std::vector<string> getCode(string name);
     void getCode(string name);
     void preprocessing();
+      void removeCom();
+      void capLet();
+      void expMacro();
+      void equIf();
+    void firstPass();
+    void secondPass();
+
     std::vector<string> codeRaw, code;
   private:
 
