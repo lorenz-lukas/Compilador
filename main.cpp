@@ -22,10 +22,10 @@ class Compiler
 void Compiler::getCode(string name)
 {
   string line;
-  ifstream myfile ("Testes/test.asm");
+  ifstream myfile (name);
   if (myfile.is_open())
   {
-    while ( getline (myfile,line) )
+    while (getline(myfile,line))
     {
       cout << line << '\n';
       this->codeRaw.push_back(line);
@@ -39,16 +39,21 @@ void Compiler::preprocessing()
 {
   string line;
   for(int i = 0; i < this->codeRaw.size() ; i++){
-        
+
   }
 }
 
 int main(int argc, char* argv[])
 {
+  if(argc<0){
+    cout<< "Too few parameters!" << endl;
+  }
+  cout << argv[1] << endl;
+  string fileName = argv[1];
   std::vector<string> code;
   Compiler com;
   //code = com.getCode("test.asm");
-  com.getCode("test.asm");
+  com.getCode(fileName);
   com.preprocessing();
   cout<< com.codeRaw[0] << endl;
 
