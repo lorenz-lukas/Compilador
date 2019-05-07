@@ -12,10 +12,8 @@ class Compiler
   public:
     //std::vector<string> getCode(string name);
     void getCode(string name);
-    void preprocessing();    
+    void preprocessing();
     std::vector<string> codeRaw, code;
-  private:
-
 };
 
 //std::vector<string> Compiler::getCode(string name){
@@ -31,15 +29,15 @@ void Compiler::getCode(string name)
       this->codeRaw.push_back(line);
     }
     myfile.close();
-  }
-  else cout << "Unable to open file";
+  }else
+    cout << "Unable to open file";
 }
 
 void Compiler::preprocessing()
 {
   string line;
   for(int i = 0; i < this->codeRaw.size() ; i++){
-
+    
   }
 }
 
@@ -54,10 +52,9 @@ int main(int argc, char* argv[])
 
   Compiler com;
 
-  //code = com.getCode("test.asm");
   com.getCode(fileName);
   com.preprocessing();
-  //cout<< com.codeRaw[0] << endl;
+  cout<< com.codeRaw[0] << endl;
 
   return 0;
 }
