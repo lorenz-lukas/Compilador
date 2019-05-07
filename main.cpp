@@ -44,7 +44,12 @@ void Compiler::preprocessing()
 {
   string line;
   for(int i = 0; i < this->codeRaw.size() ; i++){
-
+    line = this->codeRaw[i];
+    this->removeCom(line);
+    this->capLet(line);
+    this->expMacro(line);
+    this->equIf(line);
+    this->brokenLabel(line);
   }
 }
 
