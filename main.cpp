@@ -12,7 +12,7 @@ class Compiler
   public:
     //std::vector<string> getCode(string name);
     void getCode(string name);
-    void preprocessing();
+    void preprocessing();    
     std::vector<string> codeRaw, code;
   private:
 
@@ -48,14 +48,16 @@ int main(int argc, char* argv[])
   if(argc<0){
     cout<< "Too few parameters!" << endl;
   }
-  cout << argv[1] << endl;
+  //cout << argv[1] << endl;
   string fileName = argv[1];
   std::vector<string> code;
+
   Compiler com;
+
   //code = com.getCode("test.asm");
   com.getCode(fileName);
   com.preprocessing();
-  cout<< com.codeRaw[0] << endl;
+  //cout<< com.codeRaw[0] << endl;
 
   return 0;
 }
