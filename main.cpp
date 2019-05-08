@@ -13,11 +13,11 @@ class Compiler
     //std::vector<string> getCode(string name);
     void getCode(string name);
     void preprocessing();
-      void removeCom();
-      void capLet();
-      void expMacro();
-      void equIf();
-      void brokenLabel();
+      void removeCom(string line);
+      void capLet(string line);
+      void expMacro(string line);
+      void brokenLabel(string line);
+      void equIf(string line);
     void firstPass();
     void secondPass();
     std::vector<string> codeRaw, code;
@@ -38,6 +38,22 @@ void Compiler::getCode(string name)
     myfile.close();
   }else
     cout << "Unable to open file";
+}
+
+void Compiler::removeCom(string line){
+
+}
+void Compiler::capLet(string line){
+
+}
+void Compiler::expMacro(string line){
+
+}
+void Compiler::brokenLabel(string line){
+
+}
+void Compiler::equIf(string line){
+
 }
 
 void Compiler::preprocessing()
