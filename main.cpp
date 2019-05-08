@@ -4,6 +4,8 @@
 #include <iterator>
 #include <vector>
 #include <fstream>
+#include <string>
+#include <cstring>
 
 using namespace std;
 
@@ -13,11 +15,9 @@ class Compiler
     //std::vector<string> getCode(string name);
     void getCode(string name);
     void preprocessing();
-      void removeCom(string line);
-      void capLet(string line);
-      void expMacro(string line);
-      void brokenLabel(string line);
-      void equIf(string line);
+      void expMacro();
+      void equIf();
+      void brokenLabel();
     void firstPass();
     void secondPass();
     std::vector<string> codeRaw, code;
@@ -32,6 +32,7 @@ void Compiler::getCode(string name)
   {
     while (getline(myfile,line))
     {
+
       cout << line << '\n';
       this->codeRaw.push_back(line);
     }
@@ -60,18 +61,23 @@ void Compiler::preprocessing()
 {
   string line;
   for(int i = 0; i < this->codeRaw.size() ; i++){
-    line = this->codeRaw[i];
-    this->removeCom(line);
-    this->capLet(line);
-    this->expMacro(line);
+<<<<<<< HEAD
+   line = this->codeRaw[i];
+   line = line.substr(0, line.find(';'));  //removes comments
+   for (int i=0; i<line.length(); i++)     // Turn all upper.
+    line.at(i) = toupper(line.at(i));
+     this->expMacro(line);
     if(line.find(":")){
       this->brokenLabel(line);
     }
     if(line.find("EQU", 0)){
       this->equIf(line);
     }
+   cout << line << '\n';
+
   }
 }
+
 
 int main(int argc, char* argv[])
 {
