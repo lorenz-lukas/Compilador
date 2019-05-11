@@ -15,12 +15,14 @@ class Compiler
     //std::vector<string> getCode(string name);
     void getCode(string name);
     void preprocessing();
-      void expMacro();
-      void equIf();
-      void brokenLabel();
+      void getMacro(string line);
+      void expMacro(string line);
+      void equIf(string line);
+      string brokenLabel(string line, int *i);
     void firstPass();
     void secondPass();
     std::vector<string> codeRaw, code;
+    std::vector<vector<string> > macrotable;
 };
 
 //std::vector<string> Compiler::getCode(string name){
@@ -40,42 +42,79 @@ void Compiler::getCode(string name)
   }else
     cout << "Unable to open file";
 }
-
-void Compiler::removeCom(string line){
-
-}
-void Compiler::capLet(string line){
+void Compiler::getMacro(string line){
 
 }
 void Compiler::expMacro(string line){
 
 }
-void Compiler::brokenLabel(string line){
+string Compiler::brokenLabel(string line, int *i){
+  //std::vector<string> temp1,temp2;
+  std::size_t found = line.find(":");
+  int index = *i;
+  int ind = index;
+  //if (found != string::npos)
+  //    cout << "First occurrence is " << found << endl;
+  //for(int i = 0; i<= index; i++)temp1.push_back(this->codeRaw[i]);
 
+  for(int j = found+1; index < this->codeRaw.size() ; j++){
+
+    if((j-1) == this->codeRaw[index].length()){
+      index++;
+      j=0;
+    }
+
+    if((int) this->codeRaw[index][j] >= 33) {
+      //cout<< ( this->codeRaw[index][j] ) << endl;
+      break;
+    }
+  }
+  line = (this->codeRaw[ind] + " " + this->codeRaw[index]);
+
+  *i = index;
+  //temp1[ind] = line;
+  //for(int i = index+1; i< (this->codeRaw.size()); i++) temp2.push_back(this->codeRaw[i]);
+  //temp1.insert(temp1.end(),temp2.begin(),temp2.end());
+
+  //cout<< "\n\n   LABEL CORRECTED:" << endl;
+  //for(int i = 0; i < temp1.size() ; i++)cout<< temp1[i]<<endl;
+  //this->codeRaw = temp1;
+  return line;
 }
+
 void Compiler::equIf(string line){
 
 }
-
 void Compiler::preprocessing()
 {
   string line;
   for(int i = 0; i < this->codeRaw.size() ; i++){
-<<<<<<< HEAD
-   line = this->codeRaw[i];
-   line = line.substr(0, line.find(';'));  //removes comments
-   for (int i=0; i<line.length(); i++)     // Turn all upper.
-    line.at(i) = toupper(line.at(i));
-     this->expMacro(line);
-    if(line.find(":")){
-      this->brokenLabel(line);
+    line = this->codeRaw[i];
+    //removes comments
+    line = line.substr(0, line.find(';'));
+    // Turn all upper.
+    for(int i=0; i<line.length(); i++)line.at(i) = toupper(line.at(i));
+    // Identify if the line is a macro
+    if(line.find("BEGINMACRO") != std::string::npos){
+        this->getMacro(line);
     }
-    if(line.find("EQU", 0)){
+    // Macro expansion
+    for(int i = 0; i < macrotable.size(); i++){
+      if(line.find(macrotable[0][i])){
+        this->expMacro(line);
+      }
+    }
+    if(line.find(":") != std::string::npos){
+      line = this->brokenLabel(line, &i);
+    }
+    if(line.find("EQU", 0) != std::string::npos){
       this->equIf(line);
     }
-   cout << line << '\n';
-
+    this->code.push_back(line);
+    
   }
+  cout<<"      CODE CORRECTED:"<< endl;
+  for(int i = 0; i < this->code.size() ; i++) cout<<this->code[i]<<endl;
 }
 
 
@@ -92,7 +131,7 @@ int main(int argc, char* argv[])
 
   com.getCode(fileName);
   com.preprocessing();
-  cout<< com.codeRaw[0] << endl;
+  //cout<< com.codeRaw[0] << endl;
 
   return 0;
 }
