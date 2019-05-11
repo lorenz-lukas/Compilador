@@ -8,7 +8,6 @@
 #include <cstring>
 
 using namespace std;
-
 class Compiler
 {
   public:
@@ -21,8 +20,11 @@ class Compiler
       string brokenLabel(string line, int *i);
     void firstPass();
     void secondPass();
+
+
     std::vector<string> codeRaw, code;
     std::vector<vector<string> > macrotable;
+    int sectionData = 0;
 };
 
 //std::vector<string> Compiler::getCode(string name){
@@ -104,16 +106,19 @@ void Compiler::preprocessing()
         this->expMacro(line);
       }
     }
-    if(line.find(":") != std::string::npos){
+    if(line.find(":") != std::string::npos && !sectionData){
       line = this->brokenLabel(line, &i);
     }
     if(line.find("EQU", 0) != std::string::npos){
       this->equIf(line);
     }
+    if(line.find("SECTION DATA") != std::string::npos){
+      this->sectionData = 1;
+    }
     this->code.push_back(line);
-    
+
   }
-  cout<<"      CODE CORRECTED:"<< endl;
+  cout<<"\n\n      CODE CORRECTED:"<< endl;
   for(int i = 0; i < this->code.size() ; i++) cout<<this->code[i]<<endl;
 }
 
