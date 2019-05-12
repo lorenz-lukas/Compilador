@@ -24,7 +24,7 @@ class Compiler
 
     std::vector<string> codeRaw, code;
     std::vector<vector<string> > macrotable, equIfTable;
-    int sectionData = 0;
+    int sectionData = 0, sectionText = 0;
 };
 
 //std::vector<string> Compiler::getCode(string name){
@@ -37,7 +37,7 @@ void Compiler::getCode(string name)
     while (getline(myfile,line))
     {
 
-      cout << line << '\n';
+      cout << line << endl;
       this->codeRaw.push_back(line);
     }
     myfile.close();
@@ -96,13 +96,24 @@ string Compiler::brokenLabel(string line, int *i){
 }
 
 void Compiler::equIf(string line){
-  //cout<<line<<endl;
+  std::vector<string> variable;
+  string name, value = "0";
+  std::size_t found = line.find(":");
+  name.append(line, 0, found);
+  if(line.find("0", 0) != std::string::npos) value = "0";
+  else value = "1";
+  variable.push_back(name);
+  variable.push_back(value);
+  this->equIfTable.push_back(variable);
 }
 void Compiler::preprocessing()
 {
   string line;
+  int control = 1;
+  std::vector<string> temp;
   for(int i = 0; i < this->codeRaw.size() ; i++){
     line = this->codeRaw[i];
+    control = 1;
     if(!line.empty()){
       //removes comments
       line = line.substr(0, line.find(';'));
@@ -125,14 +136,33 @@ void Compiler::preprocessing()
         this->equIf(line);
       }
       if(line.find("IF", 0) != std::string::npos){
+        string name;
+        int j=0;
+        std::size_t found = line.find("IF");
 
+        name.append(line, found+3, line.length());
+        for(; j < (int)this->equIfTable.size(); j++){
+          if(name == this->equIfTable[0][j])break;
+        }
+        string temp = this->equIfTable[j][1];
+        if(int(temp[0]) == 48){
+          i+=2;
+          line = this->codeRaw[i];
+        }else control = 0;
       }
       if(line.find("SECTION DATA") != std::string::npos){
         this->sectionData = 1;
       }
-      this->code.push_back(line);
+      if(!line.empty() && control) temp.push_back(line);
     }
   }
+  for(control = 0;control<temp.size();control++){
+    line = temp[control];
+    if(line.find("SECTION TEXT") != std::string::npos){
+      break;
+    }
+  }
+  for(int i = control; i < temp.size(); i++) this->code.push_back(temp[i]);
   cout<<"\n\n      CODE CORRECTED:"<< endl;
   for(int i = 0; i < this->code.size() ; i++) cout<<this->code[i]<<endl;
 }
