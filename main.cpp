@@ -23,7 +23,7 @@ class Compiler
 
 
     std::vector<string> codeRaw, code;
-    std::vector<vector<string> > macrotable;
+    std::vector<vector<string> > macrotable, equIfTable;
     int sectionData = 0;
 };
 
@@ -58,22 +58,33 @@ string Compiler::brokenLabel(string line, int *i){
   //if (found != string::npos)
   //    cout << "First occurrence is " << found << endl;
   //for(int i = 0; i<= index; i++)temp1.push_back(this->codeRaw[i]);
+  if( (index+1) >= line.length()){
+    for(int j = found+1; index < this->codeRaw.size() ; j++){
 
-  for(int j = found+1; index < this->codeRaw.size() ; j++){
+      if((j-1) == this->codeRaw[index].length()){
+        index++;
+        j=0;
+      }
 
-    if((j-1) == this->codeRaw[index].length()){
-      index++;
-      j=0;
+      if((int) this->codeRaw[index][j] >= 33) {
+        //cout<< ( this->codeRaw[index][j] ) << endl;
+        break;
+      }
     }
+    line = (this->codeRaw[ind] + " " + this->codeRaw[index]);
 
-    if((int) this->codeRaw[index][j] >= 33) {
-      //cout<< ( this->codeRaw[index][j] ) << endl;
-      break;
+    *i = index;
+  }else{
+    if( (int)line[found+2] == 32){ // SPACE
+      int j = found+1;
+      found+=2;
+      string temp = line;
+      for(; (int)line[j] == 32; j++);
+      int beginEqu = j;
+      for(; j < temp.length(); j++, found++)line[found] = line[j];
+      line.resize(beginEqu);
     }
   }
-  line = (this->codeRaw[ind] + " " + this->codeRaw[index]);
-
-  *i = index;
   //temp1[ind] = line;
   //for(int i = index+1; i< (this->codeRaw.size()); i++) temp2.push_back(this->codeRaw[i]);
   //temp1.insert(temp1.end(),temp2.begin(),temp2.end());
@@ -85,38 +96,42 @@ string Compiler::brokenLabel(string line, int *i){
 }
 
 void Compiler::equIf(string line){
-
+  //cout<<line<<endl;
 }
 void Compiler::preprocessing()
 {
   string line;
   for(int i = 0; i < this->codeRaw.size() ; i++){
     line = this->codeRaw[i];
-    //removes comments
-    line = line.substr(0, line.find(';'));
-    // Turn all upper.
-    for(int i=0; i<line.length(); i++)line.at(i) = toupper(line.at(i));
-    // Identify if the line is a macro
-    if(line.find("BEGINMACRO") != std::string::npos){
-        this->getMacro(line);
-    }
-    // Macro expansion
-    for(int i = 0; i < macrotable.size(); i++){
-      if(line.find(macrotable[0][i])){
-        this->expMacro(line);
+    if(!line.empty()){
+      //removes comments
+      line = line.substr(0, line.find(';'));
+      // Turn all upper.
+      for(int i=0; i<line.length(); i++)line.at(i) = toupper(line.at(i));
+      // Identify if the line is a macro
+      if(line.find("BEGINMACRO") != std::string::npos){
+          this->getMacro(line);
       }
-    }
-    if(line.find(":") != std::string::npos && !sectionData){
-      line = this->brokenLabel(line, &i);
-    }
-    if(line.find("EQU", 0) != std::string::npos){
-      this->equIf(line);
-    }
-    if(line.find("SECTION DATA") != std::string::npos){
-      this->sectionData = 1;
-    }
-    this->code.push_back(line);
+      // Macro expansion
+      for(int i = 0; i < macrotable.size(); i++){
+        if(line.find(macrotable[0][i])){
+          this->expMacro(line);
+        }
+      }
+      if(line.find(":") != std::string::npos && !sectionData){
+        line = this->brokenLabel(line, &i);
+      }
+      if(line.find("EQU", 0) != std::string::npos){
+        this->equIf(line);
+      }
+      if(line.find("IF", 0) != std::string::npos){
 
+      }
+      if(line.find("SECTION DATA") != std::string::npos){
+        this->sectionData = 1;
+      }
+      this->code.push_back(line);
+    }
   }
   cout<<"\n\n      CODE CORRECTED:"<< endl;
   for(int i = 0; i < this->code.size() ; i++) cout<<this->code[i]<<endl;
