@@ -64,19 +64,16 @@ string Compiler::brokenLabel(string line, int *i){
   //for(int i = 0; i<= index; i++)temp1.push_back(this->codeRaw[i]);
   if( (index+1) >= line.length()){
     for(int j = found+1; index < this->codeRaw.size() ; j++){
-
       if((j-1) == this->codeRaw[index].length()){
         index++;
         j=0;
       }
-
       if((int) this->codeRaw[index][j] >= 33) {
         //cout<< ( this->codeRaw[index][j] ) << endl;
         break;
       }
     }
     line = (this->codeRaw[ind] + " " + this->codeRaw[index]);
-
     *i = index;
   }else{
     if( (int)line[found+2] == 32){ // SPACE
@@ -151,15 +148,32 @@ void Compiler::preprocessing()
         }
 
         string temp = this->equIfTable[j][1];
-        if(int(temp[0]) == 48){
-          i+=2;
-          line = this->codeRaw[i];
+        if(int(temp[0]) == 48){ // EQU 0
+          //cout<< this->codeRaw[i] << endl;
+          /*int j = i;
+          for(;j < (int)this->codeRaw.size() ; j++){
+              for(int k = 0; k < this->codeRaw[j].length(); k++){
+                  if((int) this->codeRaw[j][k] >= 33) break;
+              }
+          }
+          i=j;
+          cout << this->codeRaw[j] << endl;
+          */
+          i++;
+          control = 0;
+          //line = this->codeRaw[i];
+          //cout<< "linha caso EQU 0"<<endl;
+          //cout<< line << endl;
         }else control = 0;
       }
       if(line.find("SECTION DATA") != std::string::npos){
         this->sectionData = 1;
       }
-      if(!line.empty() && control) temp.push_back(line);
+      if(!line.empty() && control){// Qualquer linha ou EQU 1
+          temp.push_back(line);
+          //cout<< line << endl;
+      }
+
     }
   }
   for(control = 0;control<temp.size();control++){
@@ -168,9 +182,11 @@ void Compiler::preprocessing()
       break;
     }
   }
+
   for(int i = control; i < temp.size(); i++) this->code.push_back(temp[i]);
   cout<<"\n\n      CODE CORRECTED:"<< endl;
   for(int i = 0; i < this->code.size() ; i++) cout<<this->code[i]<<endl;
+
 }
 
 
