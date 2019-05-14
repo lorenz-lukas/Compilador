@@ -121,7 +121,7 @@ void Compiler::preprocessing()
       // Turn all upper.
       for(int i=0; i<line.length(); i++)line.at(i) = toupper(line.at(i));
       // Identify if the line is a macro
-      if(line.find("BEGINMACRO") != std::string::npos){
+      if(line.find("MACRO") != std::string::npos){
           this->getMacro(line);
       }
       // Macro expansion

@@ -1,5 +1,5 @@
-L1:      EQU 1
-L2: EQU 0
+L1:      eQU 1
+L2: EQU 1
 
 section TEXT
 IF L1
@@ -12,7 +12,7 @@ ROT:
 
 INPUT N1
 copy N1, N4 ; comentario qualquer
-COPY N2, N3
+COPY N2,N3
 COPY N3, N3 + 1
 output N3 + 1
 STOP
