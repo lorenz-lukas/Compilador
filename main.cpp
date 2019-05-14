@@ -55,6 +55,7 @@ string Compiler::brokenLabel(string line, int *i){
   std::size_t found = line.find(":");
   int index = *i;
   int ind = index;
+  //////  USAR O QUE TA COMENTADO PRA FUNÇÃO GET MACRO
   //if (found != string::npos)
   //    cout << "First occurrence is " << found << endl;
   //for(int i = 0; i<= index; i++)temp1.push_back(this->codeRaw[i]);
