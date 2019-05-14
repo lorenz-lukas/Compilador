@@ -6,6 +6,7 @@
 #include <fstream>
 #include <string>
 #include <cstring>
+#include <typeinfo>
 
 using namespace std;
 class Compiler
@@ -32,6 +33,8 @@ void Compiler::getCode(string name)
 {
   string line;
   ifstream myfile (name);
+  cout<<"###############################"<<endl;
+  cout<<"      ORIGINAL CODE:\n"<< endl;
   if (myfile.is_open())
   {
     while (getline(myfile,line))
@@ -142,9 +145,11 @@ void Compiler::preprocessing()
         std::size_t found = line.find("IF");
 
         name.append(line, found+3, line.length());
+
         for(; j < (int)this->equIfTable.size(); j++){
           if(name == this->equIfTable[0][j])break;
         }
+
         string temp = this->equIfTable[j][1];
         if(int(temp[0]) == 48){
           i+=2;
