@@ -12,6 +12,7 @@
 #include <cstring>
 #include "pre_processor.h"
 #include "ifequ.h"
+#include "macro.h"
 
 int scanner(char * file_name, std::list<Token> & tokenlist, std::list<Token> & labellist);
 int identify_tokens (char * s, std::list<Token> & tokenlist);

@@ -1,12 +1,12 @@
 /** @brief Inclusão da biblioteca de verificação de argumentos */
 
-#include "argument_checks.h"
+#include "validate_arguments.h"
 
 /**  Instrução de uso correto do programa e escolha do tipo de output */
 static void showUsage() {
 	printf("Usage:    .\\tradutor assembly_file.asm\n");
 }
-void validateArguments(int argc, char* argv[]) {
+void validate_arguments(int argc, char* argv[]) {
 	checkArgumentAmount(argc);
 	checkFileExtension(argv[1]);
 }

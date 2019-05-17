@@ -46,6 +46,7 @@ int semantic_analyser(list <Token> & tokenlist, list <Token> & labellist){
     list<Token>::iterator text_it, data_it;
     int err = 0;
     int hasdatasec = 0;
+
     err+=duplicate_label(labellist);
     err+=section_placement(tokenlist, text_it, data_it, hasdatasec);
     
@@ -120,6 +121,7 @@ int section_placement (list <Token> & tokenlist, list<Token>::iterator & text, l
     list<Token>::iterator it = tokenlist.begin();
     int err = 0;
     int count = 0;
+
     while (it != tokenlist.end()){
         if (it->type == TT_DIRECTIVE && it->addit_info == DIR_SECTION && it->flag != -1){     //if section
             it++;
@@ -162,13 +164,33 @@ int section_placement (list <Token> & tokenlist, list<Token>::iterator & text, l
 
 int check_symbols_from_data(list <Token> & tokenlist, list<Token>::iterator data_begin){
     int err = 0;
-    int i =0;
-    list<Token>::iterator it, data_it, aux;
+    int i =0,konst;
+    list<Token>::iterator it, data_it, aux,aux2;
+
     for (it = tokenlist.begin(); it != tokenlist.end(); it++){
         if (it->type == TT_OPERAND && it->addit_info != -1 && it->flag != -1){
             for (data_it = data_begin; data_it != tokenlist.end(); data_it++){
                 if (data_it->type == TT_LABEL){
                     if (data_it->str.substr(0, data_it->str.find(":")) == it->str){
+                        aux2=it;
+                        aux2++;
+
+                        if (aux2->type == TT_PLUS_OPERATOR && aux2->line_number == it->line_number)
+                        {
+                            aux2++;
+                            if (aux2->type == TT_CONST && aux2->line_number == it->line_number)
+                            {
+                                konst = aux2->addit_info;
+                                aux2 = data_it;
+                                advance(aux2,2);
+                                if (aux2->type == TT_CONST && aux2->line_number == data_it->line_number && aux2->addit_info <= konst){
+                                    fprintf(stderr, "Semantic error @ line %d -Argument '%s' not reserved in vector '%s' in DATA section.\n", it->line_number, it->str.c_str(), data_it->str.c_str());
+                                    pre_error = 1;
+                                    err++;                                    
+                                }
+                                
+                            }
+                        }
                         data_it->flag = 100;        //marks data flags that are related to an operand
                         break;
                     }
@@ -205,13 +227,13 @@ int check_symbols_from_data(list <Token> & tokenlist, list<Token>::iterator data
             }
         }
     }
-    for (data_it = data_begin; data_it != tokenlist.end(); data_it++){
+    /*for (data_it = data_begin; data_it != tokenlist.end(); data_it++){
         if (data_it->type == TT_LABEL && data_it->flag != 100 && data_it->addit_info != -1){
             fprintf(stderr, "Warning @ line %d - Unused '%s' argument.\n", data_it->line_number, data_it->str.c_str());
             //pre_error = 1;
             //err++;
         }
-    }
+    }*/
     return err;
 }
 

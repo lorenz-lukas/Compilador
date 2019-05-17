@@ -4,8 +4,8 @@ CIC 116432 - Software Basico - Turma B
 Professor Bruno Macchiavello
 Trabalho Pratico 2 - Montador + Ligador
 
-Alunos: Andre Abreu Rodrigues de Almeida    12/0007100
-        Bruno Takashi Tengan                12/0167263
+Alunos: 
+
 */
 
 
@@ -15,7 +15,7 @@ Alunos: Andre Abreu Rodrigues de Almeida    12/0007100
 #include <fstream>
 #include <string>
 #include <cstring>
-#include "argument_checks.h"
+#include "validate_arguments.h"
 #include "pre_processor.h"
 #include "scanner.h"
 #include "parser.h"
@@ -42,7 +42,7 @@ int main (int argc, char** argv){
     list<int> object, realoc;
     list<int>::iterator it_ob;
 
-    validateArguments(argc, argv);
+    validate_arguments(argc, argv);
     
     string file_name;
     string object_fn, pre_fn;
@@ -53,10 +53,6 @@ int main (int argc, char** argv){
     file_name = file_name = string(argv[1]);
     pre_processor(strdup(file_name.c_str()), tokenlist);
     
-    if (pre_error){
-        cout << endl << "Error = true. The process will terminate before creating output files." << endl << endl;
-        return 0;
-    }
     /*create pre_processing file*/
     pre_fn = string(argv[1]);
     pre_fn = pre_fn.substr(0, pre_fn.find('.')) ;
@@ -78,6 +74,10 @@ int main (int argc, char** argv){
     fpo.close();   //closes output file
 
 
+    if (pre_error){
+        cout << endl << "Error = true. The process will terminate before creating object file." << endl << endl;
+        return 0;
+    }
 
     //solve_macro(tokenlist);
     synthesizer(tokenlist, object, realoc, dt, ut);

@@ -1,5 +1,5 @@
-#ifndef ARGUMENT_CHECKS_H_
-#define ARGUMENT_CHECKS_H_
+#ifndef VALIDATE_ARGUMENTS_H_
+#define VALIDATE_ARGUMENTS_H_
 
 /** @brief Inclusão de bibliotecas e Declaração de funções de verificação.
 */
@@ -9,9 +9,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-void validateArguments(int argc, char* argv[]);
+void validate_arguments(int argc, char* argv[]);
 void checkArgumentAmount(int argc);
 void checkFileExtension(char* file_name);
 int checkOutputOption(char* op);
 
-#endif /* ARGUMENT_CHECKS_H_ */
+#endif /* VALIDATE_ARGUMENTS_H_ */

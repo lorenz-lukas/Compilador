@@ -21,7 +21,7 @@ int pre_processor(char * input_fn, list<Token> & tokenlist){
     scanner(input_fn, tokenlist, labellist);
     parser(tokenlist, labellist);
     semantic_analyser(tokenlist, labellist);
-    solve_macro(tokenlist);
+    //solve_macro(tokenlist);
 
 #ifdef __DEBUG__
     print_list(tokenlist);

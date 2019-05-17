@@ -20,8 +20,10 @@ using namespace std;
 
 int scanner (char * s, list<Token> & tokenlist, list<Token> & labellist){
     identify_tokens(s, tokenlist);      //generates token list
+    //print_list (tokenlist);
     verify_tokens(tokenlist, labellist);       //verifies token lexic validity
     ifequ(tokenlist, labellist);
+    solve_macro(tokenlist);
 #ifdef __DEBUG__
     print_list (tokenlist);
     print_list (labellist);
@@ -552,6 +554,7 @@ void verify_tokens (list<Token> & tokenlist, list<Token> & labellist){
 */
     list<Token>::iterator it = tokenlist.begin();
     for (it = tokenlist.begin();it != tokenlist.end(); it++){
+
         categorize_token(*it, labellist, tokenlist);
     }
 }

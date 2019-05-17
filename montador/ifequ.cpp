@@ -28,25 +28,19 @@ int equilizer(list<Token> & tokenlist, list<Token> & labellist){
 int identify_equ(list<Token> & tokenlist, list<Token> & labellist){
     list<Token>::iterator t_it, t_newit, aux, aux2, l_it;
     string label, value, delimiter = ":";
-    int i, ad_info, type, equ_error = 0,section=0;
+    int i, ad_info, type, equ_error = 0;
+    bool section = false;
     for (t_it = tokenlist.begin();t_it != tokenlist.end(); t_it++){     //scans all the tokenlist
-        if (t_it->type == TT_DIRECTIVE && t_it->addit_info == DIR_SECTION) {
-            section = 1; // if it's "section"
-            cout << "passou para alguma section, flag: " << section << endl;
-        }
-        if (t_it->type == TT_DIRECTIVE && t_it->addit_info == DIR_EQU){     //if it's "EQU"
+        //cout << "\n" << "Token: " << t_it->str << "..   \tLine: " << t_it->line_number << "   \tPosition in line: " << t_it->token_pos_il << "    \tType: " << t_it->type << "        \taddit_info: " << t_it->addit_info << "    \tflag: " << t_it->flag << "     \tinfo str: " << t_it->info_str  << endl;
             
-            if(section) { //if it's "EQU" after any "section"
-                cout << "reconheceu erro: " << section << endl;
-                fprintf(stderr, "Sintax error @ line %d - 'EQU' directive declared after TEXT oder DATA section .\n", t_it->line_number);
-                mark_sintax_error(tokenlist,t_it);
-                pre_error = 1;
-                equ_error = 1;
-                break;
+        if (t_it->type == TT_DIRECTIVE && t_it->addit_info == (DIR_SECTION || DIR_TEXT || DIR_DATA)) {
+            section = true; // if it's "section"
             }
-
+        if (t_it->type == TT_DIRECTIVE && t_it->addit_info == DIR_EQU){     //if it's "EQU"
             t_newit = t_it;
             t_newit --;
+            //if it's "EQU" after any "section"
+            if(section) fprintf(stderr, "Warning @ line %d - 'EQU' directive declared after TEXT oder DATA section .\n", t_it->line_number);
             if (t_it != tokenlist.begin()){      //checks if it is the first token
                     if (t_newit->type == TT_LABEL){     //checks if previous is label
                         label = t_newit->str.substr(0, t_newit->str.find(delimiter));
