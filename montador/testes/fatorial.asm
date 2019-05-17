@@ -1,0 +1,35 @@
+L1:      eQU 1 
+L2: EQU 1
+l3: equ 0
+
+SECTION TEXT
+l4: equ 1
+MUL_N: MACRO 
+MULT N
+if l4
+STORE N
+END
+INPUT N
+LOAD N
+FAT: SUB ONE;qcbqcbqicvbq
+JMPZ FIM ;
+STORE AUX
+MUL_N
+if l3 
+LOAD AUX
+JMP FAT
+FIM: COPY N,N+1
+IF L1
+OUTPUT N+1
+STOP
+
+SECTION DATA
+AUX: SPACE
+N: SPACE 5
+ONE: cONsT 1
+IF L2
+TWO: CONST 2
+if l3
+three: CONST 3
+;four: Const 4
+
