@@ -12,11 +12,10 @@ using namespace std;
 class Compiler
 {
   public:
-    //std::vector<string> getCode(string name);
     void getCode(string name);
     void preprocessing();
-      void getMacro(string line);
-      void expMacro(string line);
+      void getMacro(string line,int *i);
+      void expMacro(string line,int *i);
       void equIf(string line);
       string brokenLabel(string line, int *i);
     void firstPass();
@@ -28,7 +27,6 @@ class Compiler
     int sectionData = 0, sectionText = 0;
 };
 
-//std::vector<string> Compiler::getCode(string name){
 void Compiler::getCode(string name)
 {
   string line;
@@ -47,21 +45,42 @@ void Compiler::getCode(string name)
   }else
     cout << "Unable to open file";
 }
-void Compiler::getMacro(string line){
+void Compiler::getMacro(string line,int *i){
+  std::size_t found = line.find(":");
+  std::vector<string> temp1,temp2;
+  string name;
+  int index = *i;
 
+  name.append(line, 0, found);
+  temp1.push_back(name);
+  if (found != string::npos){
+    for(int j = index+1; j<= this->codeRaw.size(); j++){
+      line = this->codeRaw[j];
+      if(line.find("END", 0) != std::string::npos)break;
+      temp1.push_back(this->codeRaw[j]);
+    }
+    cout<< int(temp1.size()) << endl;
+    this->macrotable.push_back(temp1);
+  }
 }
-void Compiler::expMacro(string line){
+
+void Compiler::expMacro(string line,int *i){
+  //cout<< this->codeRaw[i] << endl;
+  /*int j = i;
+  for(;j < (int)this->codeRaw.size() ; j++){
+      for(int k = 0; k < this->codeRaw[j].length(); k++){
+          if((int) this->codeRaw[j][k] >= 33) break;
+      }
+  }
+  i=j;
+  cout << this->codeRaw[j] << endl;
+  */
 
 }
 string Compiler::brokenLabel(string line, int *i){
-  //std::vector<string> temp1,temp2;
   std::size_t found = line.find(":");
   int index = *i;
   int ind = index;
-  //////  USAR O QUE TA COMENTADO PRA FUNÇÃO GET MACRO
-  //if (found != string::npos)
-  //    cout << "First occurrence is " << found << endl;
-  //for(int i = 0; i<= index; i++)temp1.push_back(this->codeRaw[i]);
   if( (index+1) >= line.length()){
     for(int j = found+1; index < this->codeRaw.size() ; j++){
       if((j-1) == this->codeRaw[index].length()){
@@ -86,13 +105,6 @@ string Compiler::brokenLabel(string line, int *i){
       line.resize(beginEqu);
     }
   }
-  //temp1[ind] = line;
-  //for(int i = index+1; i< (this->codeRaw.size()); i++) temp2.push_back(this->codeRaw[i]);
-  //temp1.insert(temp1.end(),temp2.begin(),temp2.end());
-
-  //cout<< "\n\n   LABEL CORRECTED:" << endl;
-  //for(int i = 0; i < temp1.size() ; i++)cout<< temp1[i]<<endl;
-  //this->codeRaw = temp1;
   return line;
 }
 
@@ -122,12 +134,12 @@ void Compiler::preprocessing()
       for(int i=0; i<line.length(); i++)line.at(i) = toupper(line.at(i));
       // Identify if the line is a macro
       if(line.find("MACRO") != std::string::npos){
-          this->getMacro(line);
+          this->getMacro(line, &i);
       }
       // Macro expansion
       for(int i = 0; i < macrotable.size(); i++){
         if(line.find(macrotable[0][i])){
-          this->expMacro(line);
+          this->expMacro(line, &i);
         }
       }
       if(line.find(":") != std::string::npos && !sectionData){
@@ -149,21 +161,8 @@ void Compiler::preprocessing()
 
         string temp = this->equIfTable[j][1];
         if(int(temp[0]) == 48){ // EQU 0
-          //cout<< this->codeRaw[i] << endl;
-          /*int j = i;
-          for(;j < (int)this->codeRaw.size() ; j++){
-              for(int k = 0; k < this->codeRaw[j].length(); k++){
-                  if((int) this->codeRaw[j][k] >= 33) break;
-              }
-          }
-          i=j;
-          cout << this->codeRaw[j] << endl;
-          */
           i++;
           control = 0;
-          //line = this->codeRaw[i];
-          //cout<< "linha caso EQU 0"<<endl;
-          //cout<< line << endl;
         }else control = 0;
       }
       if(line.find("SECTION DATA") != std::string::npos){
@@ -171,7 +170,6 @@ void Compiler::preprocessing()
       }
       if(!line.empty() && control){// Qualquer linha ou EQU 1
           temp.push_back(line);
-          //cout<< line << endl;
       }
 
     }
@@ -186,16 +184,16 @@ void Compiler::preprocessing()
   for(int i = control; i < temp.size(); i++) this->code.push_back(temp[i]);
   cout<<"\n\n      CODE CORRECTED:"<< endl;
   for(int i = 0; i < this->code.size() ; i++) cout<<this->code[i]<<endl;
+}
+void Compiler::firstPass(){
 
 }
-
 
 int main(int argc, char* argv[])
 {
   if(argc<0){
     cout<< "Too few parameters!" << endl;
   }
-  //cout << argv[1] << endl;
   string fileName = argv[1];
   std::vector<string> code;
 
@@ -203,20 +201,6 @@ int main(int argc, char* argv[])
 
   com.getCode(fileName);
   com.preprocessing();
-  //cout<< com.codeRaw[0] << endl;
-
+  com.firstPass();
   return 0;
 }
-
-/*
-std::list<int> s;
-s.push_back(1);
-std::list<int>::iterator it = s.begin();
-
-while(it != s.end())
-{
-  std::cout<<(*it)<<"  ";
-  it++;
-}
-std::cout<<std::endl;
-*/
