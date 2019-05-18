@@ -37,7 +37,7 @@
 //DIRECTIVES
 #define SECTION   1
 #define SPACE     2
-#define CONST     3
+#define CON       3  // CONST
 #define TEXT      4
 #define DATA      5
 
@@ -54,15 +54,17 @@ class Compiler
       void expMacro(string line,int *i);
       void equIf(string line);
       string brokenLabel(string line, int *i);
-    void errorTreatment()
+    void errorTreatment();
       void scaner();//lexic error
       void parser();//sintatic error
-      void semanErrorDetection();
+      void semananticErrorDetection();
+      void semanticErrorTreat();
     void firstPass();
     void secondPass();
 
 
     std::vector<string> codeRaw, code;
+    std::vector<string> originalCodeLine;
     std::vector<vector<string> > macrotable, equIfTable;
     string instructions[14] =
     {"ADD","SUB","MULT","DIV","JUMP","JUMPN","JUMPP","JUMPZ","COPY","LOAD","STORE","INPUT","OUTPUT","STOP"};
@@ -83,7 +85,7 @@ class Compiler
       int position;
     };
     typedef struct Symbol Symbol;
-    
+
     std::vector<Token> tokenTable, labelTable;
     std::vector<Symbol> symbleTable;
     std::vector<int> object;
@@ -144,8 +146,8 @@ void Compiler::getMacro(string line,int *i){
 }
 
 void Compiler::expMacro(string line,int *i){
-
-  //cout<< this->codeRaw[i] << endl;
+  //cout<< "oi "<<endl;
+  //cout<< this->macrotable[0][0] << endl;
   /*int j = i;
   for(;j < (int)this->codeRaw.size() ; j++){
       for(int k = 0; k < this->codeRaw[j].length(); k++){
@@ -214,16 +216,6 @@ void Compiler::preprocessing()
       line = line.substr(0, line.find(';'));
       // Turn all upper.
       for(int j=0; j<line.length(); j++)line.at(j) = toupper(line.at(j));
-      // Shift correction
-      /*if(line[0]==32){
-        string instruction;
-        for(j=0;j<line.length();j++){
-          if(line[j]>32)break;
-        }
-        int size = line.length();
-        instruction.append(line, j, size);
-        line = instruction;
-      } */
       // Identify if the line is a macro
       if(line.find("MACRO") != std::string::npos){
           this->getMacro(line, &i);
@@ -300,13 +292,16 @@ void Compiler::scaner(){
 void Compiler::parser(){
 
 }
-void Compiler::semErroTreat(){
+void Compiler::semananticErrorDetection(){
+
+}
+void Compiler::semanticErrorTreat(){
 }
 void Compiler::firstPass(){ //done
-  vector<Token>::iterator it;
+  std::vector<Token>::iterator it;
   Symbol symbol;
   int posCounter=0;
-  for (it = tokenTable.begin();it != tokenTable.end();it++)
+  for (it = tokenTable.begin(); it != tokenTable.end(); it++)
   {
     switch (it->genericType)
     {
@@ -323,7 +318,7 @@ void Compiler::firstPass(){ //done
           {
             posCounter+= it->specificInfo;
           } else {
-            posCounte++;
+            posCounter++;
             it--;
           }
 
@@ -354,92 +349,86 @@ void Compiler::secondPass(){ //done
   vector<Token>::iterator it_to;
   vector<Symbol>::iterator it_sy;
   vector<int>::iterator it_ob;
-  
-  for (it = tokenTable.begin();it != tokenTable.end();it++)
+
+  for (it_to = tokenTable.begin();it_to != tokenTable.end();it_to++)
   {
     switch (it_to->genericType)
     {
-    case MNEMONIC:
-      object.insert(object.end(),it_to->specificInfo);
-    break;
+        case MNEMONIC:
+          object.insert(object.end(),it_to->specificInfo);
+        break;
 
-    case OPERAND:
-      for ( it_sy = symbleTable.begin(); it_sy != symbleTable.end(); it_sy++)
-      {
-        if (it_to->token == it_sy->label)
-        {
-          it_to++;
-          if (it_to->genericType == PLUS)
+        case OPERAND:
+          for ( it_sy = symbleTable.begin(); it_sy != symbleTable.end(); it_sy++)
           {
-            it_to++;
-            if (it_to->genericType == CONST)
+            if (it_to->token == it_sy->label)
             {
-              object.insert(object.end(),it_sy->position + it_to->specificInfo);
-              break;
-            }else
-            {
-              it_to--;
-              cout << "second pass: error!" << endl;
-								break;
-            }            
-          }
-          else
-          {
-            object.insert(object.end(),it_sy->position);
-            it_to--;
-            break;
-          }          
-        }
-        
-      }
-      
-      break;
-
-    case DIRECTIVE:
-        switch (it->specificInfo)
-        {
-          case SPACE:
-            it_to++;
-            if (it_to->genericType == CONST && it_to != tokenTable.end())
-            {
-              for ( int i = 0; i < it_to->specificInfo; i++)
+              it_to++;
+              if (it_to->genericType == PLUS)
               {
-                object.insert(object.end(),0);
+                it_to++;
+                if (it_to->genericType == CONST)
+                {
+                  object.insert(object.end(),it_sy->position + it_to->specificInfo);
+                  break;
+                }else
+                {
+                  it_to--;
+                  cout << "second pass: error!" << endl;
+    								break;
+                }
               }
-
-            } else {
-                object.insert(object.end(),0);
+              else
+              {
+                object.insert(object.end(),it_sy->position);
+                it_to--;
+                break;
+              }
             }
-
-          break;
-
-          case CONST:
-            it_to++;
-            if (it_to->genericType == CONST)
+          }
+        break;
+        case DIRECTIVE:
+            switch (it_to->specificInfo)
             {
-              object.insert(object.end(),it_to->specificInfo);
-            } 
-            else
-            {
-              it_to--;
-              cout << "second pass: error!" << endl;
-            }
-          break;
+              case SPACE:
+                it_to++;
+                if (it_to->genericType == CONST && it_to != tokenTable.end())
+                {
+                  for ( int i = 0; i < it_to->specificInfo; i++)
+                  {
+                    object.insert(object.end(),0);
+                  }
 
-          default:
-          break;
-        }
-    break;
+                } else {
+                    object.insert(object.end(),0);
+                }
+                break;
+                case CONST:
+                  it_to++;
+                  if (it_to->genericType == CONST)
+                  {
+                    object.insert(object.end(),it_to->specificInfo);
+                  }
+                  else
+                  {
+                    it_to--;
+                    cout << "second pass: error!" << endl;
+                  }
+                break;
 
+                default:
+                break;
+              }
+        break;
 
-    default:
-      break;
-  }
-  if (it_to == tokenTable.end()){
+        default:
+        break;
+    }
+    if (it_to == tokenTable.end()){
 			break;
 		}
+  }
 }
-
 
 int main(int argc, char* argv[])
 {
@@ -448,15 +437,13 @@ int main(int argc, char* argv[])
   }
   string fileName = argv[1];
   std::vector<string> code;
-  std::
-
   Compiler com;
 
   com.getCode(fileName);
   com.preprocessing();
   com.scaner();
   com.parser();
-  com.semErroTreat();
+  com.semanticErrorTreat();
   com.firstPass();
   com.secondPass();
   return 0;
