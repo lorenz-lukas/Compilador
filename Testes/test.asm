@@ -1,5 +1,5 @@
 L1:      eQU 1
-L2: EQU 0
+L2: EQU 1
 
 section TEXT
 IF L1
@@ -11,7 +11,7 @@ MULT N
 STORE N
 END
 
-TROCA: MACRO &A,&B
+TROCA: MACRO
   COPY A, TEMP
   COPY B, A
   COPY TEMP, B
@@ -21,7 +21,7 @@ ROT:
 
 
 INPUT N1
-  copy N1, N4 ; comentario qualquer
+copy N1, N4 ; comentario qualquer
 COPY N2,N3
 COPY N3, N3 + 1
 output N3 + 1

@@ -19,6 +19,6 @@ struct Symbol {
 typedef struct Symbol Symbol;
 /*------------------------------------*/
 
-void first_pass(list<Token> & tokenlist, list<Symbol> & symboltable, list<Symbol> & dt, list<Symbol> & ut);
+void first_pass(list<Token> & tokenlist, list<Symbol> & symboltable);
 
 #endif /* FIRST_PASS_H_ */

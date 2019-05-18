@@ -8,6 +8,42 @@
 #include <cstring>
 #include <typeinfo>
 
+// GENERIC TOKEN TYPE -> used in genericType
+#define MNEMONIC    1
+#define LABEL       2
+#define DIRECTIVE   3
+#define OPERAND     4
+#define CONST       5
+#define COMMA       6
+#define PLUS        7
+#define AMPERSAND   8
+//SPECIFIC TOKEN INFORMATION -> used in specificInfo
+//OPERANDS:
+#define ADD             1
+#define SUB             2
+#define MULT            3
+#define DIV             4
+#define JMP             5
+#define JMPN            6
+#define JMPP            7
+#define JMPZ            8
+#define COPY            9
+#define LOAD            10
+#define STORE           11
+#define INPUT           12
+#define OUTPUT          13
+#define STOP            14
+#define BASIC_OPERAND   15   // FOR , + &
+//DIRECTIVES
+#define SECTION   1
+#define SPACE     2
+#define CONST     3
+#define TEXT      4
+#define DATA      5
+
+#define INVALID -1
+
+
 using namespace std;
 class Compiler
 {
@@ -18,10 +54,11 @@ class Compiler
       void expMacro(string line,int *i);
       void equIf(string line);
       string brokenLabel(string line, int *i);
+    void errorTreatment()
+      void scaner();//lexic error
+      void parser();//sintatic error
+      void semanErrorDetection();
     void firstPass();
-      void scaner();
-      void parser();
-      void semErroTreat();
     void secondPass();
 
 
@@ -32,16 +69,24 @@ class Compiler
     int sectionData = 0, sectionText = 0;
 
     struct Token {
-      std::string str;
+      std::string token;
       int lineNumber;
-      int tokenPosLin;
-      int type;
-      int extraInfo;
+      int tokenPosInLin;
+      int genericType;
+      int specificInfo;
       int flag;
     };
-
     typedef struct Token Token;
-    std::vector<Token> tokenList;
+
+    struct Symbol {
+      string label;
+      int position;
+    };
+    typedef struct Symbol Symbol;
+    
+    std::vector<Token> tokenTable, labelTable;
+    std::vector<Symbol> symbleTable;
+    std::vector<int> object;
 };
 
 void Compiler::getCode(string name)
@@ -245,11 +290,145 @@ void Compiler::parser(){
 
 }
 void Compiler::semErroTreat(){
-
 }
-void Compiler::firstPass(){
+void Compiler::firstPass(){ //done
+  vector<Token>::iterator it;
+  Symbol symbol;
+  int posCounter=0;
+  for (it = tokenTable.begin();it != tokenTable.end();it++)
+  {
+    switch (it->genericType)
+    {
+    case MNEMONIC:
+    case OPERAND:
+      posCounter++;
+      break;
+    case DIRECTIVE:
+      switch (it->specificInfo)
+      {
+        case SPACE:
+          it++;
+          if (it->genericType == CONST)
+          {
+            posCounter+= it->specificInfo;
+          } else {
+            posCounte++;
+            it--;
+          }
 
+        break;
+
+        case CONST:
+          posCounter++;
+        break;
+
+        default:
+        break;
+      }
+      break;
+
+    case LABEL:
+        symbol.label = it->token.substr(0,it->token.length()-1);//store label in variable
+        symbol.position = posCounter;
+        symbleTable.insert(symbleTable.end(), symbol);
+      break;
+
+    default:
+      break;
+    }
+  }
 }
+
+void Compiler::secondPass(){ //done
+  vector<Token>::iterator it_to;
+  vector<Symbol>::iterator it_sy;
+  vector<int>::iterator it_ob;
+  
+  for (it = tokenTable.begin();it != tokenTable.end();it++)
+  {
+    switch (it_to->genericType)
+    {
+    case MNEMONIC:
+      object.insert(object.end(),it_to->specificInfo);
+    break;
+
+    case OPERAND:
+      for ( it_sy = symbleTable.begin(); it_sy != symbleTable.end(); it_sy++)
+      {
+        if (it_to->token == it_sy->label)
+        {
+          it_to++;
+          if (it_to->genericType == PLUS)
+          {
+            it_to++;
+            if (it_to->genericType == CONST)
+            {
+              object.insert(object.end(),it_sy->position + it_to->specificInfo);
+              break;
+            }else
+            {
+              it_to--;
+              cout << "second pass: error!" << endl;
+								break;
+            }            
+          }
+          else
+          {
+            object.insert(object.end(),it_sy->position);
+            it_to--;
+            break;
+          }          
+        }
+        
+      }
+      
+      break;
+
+    case DIRECTIVE:
+        switch (it->specificInfo)
+        {
+          case SPACE:
+            it_to++;
+            if (it_to->genericType == CONST && it_to != tokenTable.end())
+            {
+              for ( int i = 0; i < it_to->specificInfo; i++)
+              {
+                object.insert(object.end(),0);
+              }
+
+            } else {
+                object.insert(object.end(),0);
+            }
+
+          break;
+
+          case CONST:
+            it_to++;
+            if (it_to->genericType == CONST)
+            {
+              object.insert(object.end(),it_to->specificInfo);
+            } 
+            else
+            {
+              it_to--;
+              cout << "second pass: error!" << endl;
+            }
+          break;
+
+          default:
+          break;
+        }
+    break;
+
+
+    default:
+      break;
+  }
+  if (it_to == tokenTable.end()){
+			break;
+		}
+}
+
 
 int main(int argc, char* argv[])
 {
@@ -258,6 +437,7 @@ int main(int argc, char* argv[])
   }
   string fileName = argv[1];
   std::vector<string> code;
+  std::
 
   Compiler com;
 
@@ -267,5 +447,6 @@ int main(int argc, char* argv[])
   com.parser();
   com.semErroTreat();
   com.firstPass();
+  com.secondPass();
   return 0;
 }

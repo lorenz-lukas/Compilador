@@ -2,11 +2,11 @@
 using namespace std;
 
 
-int synthesizer (list<Token> & tokenlist, list<int> & object, list<int> & realoc, list<Symbol> & dt, list<Symbol> & ut){
+int synthesizer (list<Token> & tokenlist, list<int> & object){
 	list<Symbol> symboltable;
 
-	first_pass(tokenlist, symboltable, dt, ut);
-	second_pass(tokenlist, symboltable, object, realoc);
+	first_pass(tokenlist, symboltable);
+	second_pass(tokenlist, symboltable, object);
 
     return 0;
 }
