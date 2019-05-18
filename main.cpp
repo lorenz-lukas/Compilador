@@ -18,16 +18,17 @@ class Compiler
       void expMacro(string line,int *i);
       void equIf(string line);
       string brokenLabel(string line, int *i);
-    void scaner();
-    void parser();
-    void semErroTreat();
     void firstPass();
+      void scaner();
+      void parser();
+      void semErroTreat();
     void secondPass();
 
 
     std::vector<string> codeRaw, code;
     std::vector<vector<string> > macrotable, equIfTable;
     int sectionData = 0, sectionText = 0;
+    
     struct Token {
       std::string str;
       int lineNumber;
@@ -36,6 +37,7 @@ class Compiler
       int extraInfo;
       int flag;
     };
+
     typedef struct Token Token;
     std::vector<Token> tokenList;
 };
@@ -219,6 +221,17 @@ void Compiler::preprocessing()
   for(int i = control; i < temp.size(); i++) this->code.push_back(temp[i]);
   cout<<"\n\n      CODE CORRECTED:"<< endl;
   for(int i = 0; i < this->code.size() ; i++) cout<<this->code[i]<<endl;
+}
+
+////////////////////////////////////// FIRST PASS 
+void Compiler::scaner(){
+  
+}
+void Compiler::parser(){
+
+}
+void Compiler::semErroTreat(){
+
 }
 void Compiler::firstPass(){
 
