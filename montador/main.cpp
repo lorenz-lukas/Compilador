@@ -69,7 +69,7 @@ int main (int argc, char** argv){
     }
 
     //solve_macro(tokenlist);
-    synthesizer(tokenlist, object, realoc, dt, ut);
+    synthesizer(tokenlist, object);
     
     /*create object file*/
     object_fn = string(argv[1]);
