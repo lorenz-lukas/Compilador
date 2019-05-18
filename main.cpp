@@ -27,8 +27,10 @@ class Compiler
 
     std::vector<string> codeRaw, code;
     std::vector<vector<string> > macrotable, equIfTable;
+    string instructions[14] =
+    {"ADD","SUB","MULT","DIV","JUMP","JUMPN","JUMPP","JUMPZ","COPY","LOAD","STORE","INPUT","OUTPUT","STOP"};
     int sectionData = 0, sectionText = 0;
-    
+
     struct Token {
       std::string str;
       int lineNumber;
@@ -65,6 +67,8 @@ void Compiler::getMacro(string line,int *i){
   std::vector<string> temp1;
   string name;
   int index = *i;
+  int j = index+1;
+  cout<< index << endl;
   if(found != string::npos){
     name.append(line, 0, found);
     found = line.find("&");
@@ -73,7 +77,7 @@ void Compiler::getMacro(string line,int *i){
       name.append(line, found, line.length());
     }
     temp1.push_back(name);
-    for(int j = index+1; j<= this->codeRaw.size(); j++){
+    for(; j<= this->codeRaw.size(); j++){
       line = this->codeRaw[j];
        if(line[0]==32){
         string instruction;
@@ -83,16 +87,18 @@ void Compiler::getMacro(string line,int *i){
         int size = line.length();
         instruction.append(line, j, size);
         line = instruction;
-      } 
+      }
       if(line.find("END", 0) != std::string::npos)break;
       temp1.push_back(line);
     }
     this->macrotable.push_back(temp1);
+    //*i = j;
+    cout<< j << endl;
   }else cout<< "Macro definition error! Miss ':' marker." << endl;
 }
 
 void Compiler::expMacro(string line,int *i){
-  
+
   //cout<< this->codeRaw[i] << endl;
   /*int j = i;
   for(;j < (int)this->codeRaw.size() ; j++){
@@ -142,7 +148,7 @@ void Compiler::equIf(string line){
   std::size_t found = line.find(":");
   name.append(line, 0, found);
   if(line.find("1") != std::string::npos)value = "1";
-  
+
   variable.push_back(name);
   variable.push_back(value);
   this->equIfTable.push_back(variable);
@@ -171,7 +177,7 @@ void Compiler::preprocessing()
         int size = line.length();
         instruction.append(line, j, size);
         line = instruction;
-      } */ 
+      } */
       // Identify if the line is a macro
       if(line.find("MACRO") != std::string::npos){
           this->getMacro(line, &i);
@@ -194,7 +200,7 @@ void Compiler::preprocessing()
         int j=0;
         std::size_t found = line.find("IF");
         name.append(line, found+3, line.length());
-        
+
         while(j < (int)this->equIfTable.size()){
           if(name == this->equIfTable[j][0])break;
           j++;
@@ -203,7 +209,7 @@ void Compiler::preprocessing()
         string temp = this->equIfTable[j][1];
 
         if(int(temp[0]) == 48){ // EQU 0
-          i++;  
+          i++;
         }
         control = 0;
       }
@@ -229,7 +235,7 @@ void Compiler::preprocessing()
 }
 
 //////////////////////////////////////////////////
-////////////////////////////////////// FIRST PASS 
+////////////////////////////////////// FIRST PASS
 //////////////////////////////////////////////////
 
 void Compiler::scaner(){
