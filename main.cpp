@@ -67,6 +67,11 @@ void Compiler::getMacro(string line,int *i){
   int index = *i;
   if(found != string::npos){
     name.append(line, 0, found);
+    found = line.find("&");
+    if(found!=string::npos){//Arguments not equal to zero
+      name+=" ";
+      name.append(line, found, line.length());
+    }
     temp1.push_back(name);
     for(int j = index+1; j<= this->codeRaw.size(); j++){
       line = this->codeRaw[j];
@@ -87,7 +92,7 @@ void Compiler::getMacro(string line,int *i){
 }
 
 void Compiler::expMacro(string line,int *i){
-  //cout<< this->macrotable.size()<<endl;
+  
   //cout<< this->codeRaw[i] << endl;
   /*int j = i;
   for(;j < (int)this->codeRaw.size() ; j++){
@@ -158,7 +163,7 @@ void Compiler::preprocessing()
       // Turn all upper.
       for(int j=0; j<line.length(); j++)line.at(j) = toupper(line.at(j));
       // Shift correction
-      if(line[0]==32){
+      /*if(line[0]==32){
         string instruction;
         for(j=0;j<line.length();j++){
           if(line[j]>32)break;
@@ -166,7 +171,7 @@ void Compiler::preprocessing()
         int size = line.length();
         instruction.append(line, j, size);
         line = instruction;
-      }  
+      } */ 
       // Identify if the line is a macro
       if(line.find("MACRO") != std::string::npos){
           this->getMacro(line, &i);
@@ -223,9 +228,12 @@ void Compiler::preprocessing()
   for(int i = 0; i < this->code.size() ; i++) cout<<this->code[i]<<endl;
 }
 
+//////////////////////////////////////////////////
 ////////////////////////////////////// FIRST PASS 
+//////////////////////////////////////////////////
+
 void Compiler::scaner(){
-  
+
 }
 void Compiler::parser(){
 
