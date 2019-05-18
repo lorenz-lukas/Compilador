@@ -66,35 +66,36 @@ void Compiler::getMacro(string line,int *i){
   std::size_t found = line.find(":");
   std::vector<string> temp1;
   string name;
-  int index = *i;
-  int j = index+1;
-  cout<< index << endl;
+  int index = *i+1;
+  int j = 0;
   if(found != string::npos){
     name.append(line, 0, found);
     found = line.find("&");
     if(found!=string::npos){//Arguments not equal to zero
-      name+=" ";
-      name.append(line, found, line.length());
+        name+=" ";
+        name.append(line, found, line.length());
+        //cout<< name << endl;
     }
     temp1.push_back(name);
-    for(; j<= this->codeRaw.size(); j++){
-      line = this->codeRaw[j];
-       if(line[0]==32){
-        string instruction;
-        for(j=0;j<line.length();j++){
-          if(line[j]>32)break;
+    for(; index <= this->codeRaw.size(); index++){
+        line = this->codeRaw[index];
+        if(line[0]==32){
+            string instruction;
+            for(j = 0;j<line.length();j++){
+              if(line[j]>32)break;
+            }
+            int size = line.length();
+            instruction.append(line, j, size);
+            line = instruction;
         }
-        int size = line.length();
-        instruction.append(line, j, size);
-        line = instruction;
-      }
-      if(line.find("END", 0) != std::string::npos)break;
-      temp1.push_back(line);
+        if(line.find("END", 0) != std::string::npos)break;
+        //cout<< line << endl;
+        temp1.push_back(line);
     }
     this->macrotable.push_back(temp1);
-    //*i = j;
-    cout<< j << endl;
-  }else cout<< "Macro definition error! Miss ':' marker." << endl;
+    *i = index;
+    //cout<< j << endl;
+  }else cout<< "Macro definition error! Miss ':' marker at line %d." << index-1 << endl;
 }
 
 void Compiler::expMacro(string line,int *i){
@@ -181,6 +182,7 @@ void Compiler::preprocessing()
       // Identify if the line is a macro
       if(line.find("MACRO") != std::string::npos){
           this->getMacro(line, &i);
+          control = 0;
       }
       // Macro expansion
       for(int j = 0; j < (int)this->macrotable.size(); j++){
@@ -215,6 +217,15 @@ void Compiler::preprocessing()
       }
       if(line.find("SECTION DATA") != std::string::npos){
         this->sectionData = 1;
+      }
+      if(line[0]==32){
+          string instruction;
+          for(j = 0;j<line.length();j++){
+            if(line[j]>32)break;
+          }
+          int size = line.length();
+          instruction.append(line, j, size);
+          line = instruction;
       }
       if(!line.empty() && control){// Qualquer linha ou EQU 1
           temp.push_back(line);

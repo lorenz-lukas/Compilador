@@ -1,5 +1,5 @@
 L1:      eQU 1
-L2: EQU 0
+L2: EQU 1
 
 section TEXT
 IF L1
