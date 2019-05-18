@@ -18,6 +18,9 @@ class Compiler
       void expMacro(string line,int *i);
       void equIf(string line);
       string brokenLabel(string line, int *i);
+    void scaner();
+    void parser();
+    void semErroTreat();
     void firstPass();
     void secondPass();
 
@@ -25,6 +28,16 @@ class Compiler
     std::vector<string> codeRaw, code;
     std::vector<vector<string> > macrotable, equIfTable;
     int sectionData = 0, sectionText = 0;
+    struct Token {
+      std::string str;
+      int lineNumber;
+      int tokenPosLin;
+      int type;
+      int extraInfo;
+      int flag;
+    };
+    typedef struct Token Token;
+    std::vector<Token> tokenList;
 };
 
 void Compiler::getCode(string name)
@@ -223,6 +236,9 @@ int main(int argc, char* argv[])
 
   com.getCode(fileName);
   com.preprocessing();
+  com.scaner();
+  com.parser();
+  com.semErroTreat();
   com.firstPass();
   return 0;
 }
