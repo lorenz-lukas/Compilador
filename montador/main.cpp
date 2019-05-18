@@ -1,14 +1,3 @@
-/*
-Universidade de Brasilia - 01/2018
-CIC 116432 - Software Basico - Turma B
-Professor Bruno Macchiavello
-Trabalho Pratico 2 - Montador + Ligador
-
-Alunos: 
-
-*/
-
-
 
 #include <cstdio>
 #include <iostream>

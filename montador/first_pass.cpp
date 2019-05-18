@@ -33,14 +33,6 @@ void first_pass(list<Token> & tokenlist, list<Symbol> & symboltable, list<Symbol
 						count_atrb++;
 					break;
 
-					/*case DIR_PUBLIC:
-						count_atrb--;
-						it_tk++;
-						defin.str = it_tk->str;
-						dt.insert(dt.end(), defin);
-						it_tk--;
-					break;*/
-
 					default:
 					break;
 				}
@@ -49,15 +41,8 @@ void first_pass(list<Token> & tokenlist, list<Symbol> & symboltable, list<Symbol
 			case TT_LABEL:
 				symbol.str = it_tk->str.substr(0, it_tk->str.length()-1);
 				
-				//it_tk++;
-				/*if (it_tk->type == TT_DIRECTIVE && it_tk->addit_info == DIR_EXTERN) {
-					symbol.atrb = 0;
-					ext.insert(ext.end(), symbol.str);
-				} else {
-					symbol.atrb = count_atrb;
-				}*/
 				symbol.atrb = count_atrb;
-				//it_tk--;
+				
 
 				symboltable.insert(symboltable.end(), symbol);
 			break;
@@ -107,9 +92,6 @@ void first_pass(list<Token> & tokenlist, list<Symbol> & symboltable, list<Symbol
 						count_atrb++;
 					break;
 
-					//case DIR_PUBLIC:
-					//	count_atrb--;
-					//break;
 
 					default:
 					break;
