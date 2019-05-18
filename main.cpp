@@ -113,12 +113,13 @@ void Compiler::equIf(string line){
   string name, value = "0";
   std::size_t found = line.find(":");
   name.append(line, 0, found);
-  if(line.find("0", 0) != std::string::npos) value = "0";
-  else value = "1";
+  if(line.find("1") != std::string::npos)value = "1";
+  
   variable.push_back(name);
   variable.push_back(value);
   this->equIfTable.push_back(variable);
 }
+
 void Compiler::preprocessing()
 {
   string line;
@@ -152,18 +153,20 @@ void Compiler::preprocessing()
         string name;
         int j=0;
         std::size_t found = line.find("IF");
-
         name.append(line, found+3, line.length());
-
-        for(; j < (int)this->equIfTable.size(); j++){
-          if(name == this->equIfTable[0][j])break;
+        
+        while(j < (int)this->equIfTable.size()){
+          if(name == this->equIfTable[j][0])break;
+          j++;
         }
 
         string temp = this->equIfTable[j][1];
+
         if(int(temp[0]) == 48){ // EQU 0
-          i++;
-          control = 0;
-        }else control = 0;
+          cout<< "IF0" << endl;
+          i++;  
+        }
+        control = 0;
       }
       if(line.find("SECTION DATA") != std::string::npos){
         this->sectionData = 1;
