@@ -74,7 +74,6 @@ class Compiler
       void expMacro(string line, int *i, int j);
       void equIf(string line);
       string brokenLabel(string line, int *i);
-
       void scaner();//lexic error
 
         void markSintaxError(vector<Token>::iterator it);
@@ -99,6 +98,8 @@ class Compiler
 
     void firstPass();
     void secondPass();
+
+    void writeOutput(string name);
 
     std::vector<Token> tokenTable, labelTable;
 		vector<Token>::iterator data_it;
@@ -342,6 +343,7 @@ void Compiler::preprocessing()
     cout<<this->originalCodeLine[i]<<endl;
   }
 }
+
 
 //////////////////////////////////////////////////
 ////////////////////////////////////// SCANER
@@ -1688,6 +1690,38 @@ void Compiler::secondPass(){ //done
   }
 }
 
+void Compiler::writeOutput(string name){
+  std::size_t found = name.find(".asm");
+  std::size_t found2 = name.find("/");
+  string extension, newName, filepre, fileobj;
+
+  extension.append(name, 0, found);
+  cout<<extension<<endl;
+  newName.append(extension, found2+1, extension.length());
+  filepre = "outputFiles/" + newName + ".pre";
+  fileobj = "outputFiles/" + newName + ".obj";
+  ofstream myfile (filepre);
+  if (myfile.is_open()){
+    for(int i=0;i < (int)this->code.size();i++){
+      myfile<<this->code[i];
+      myfile<<"\n";
+    }
+    myfile.close();
+  }else cout << "Unable to open the preprocessed file (file.pre).";
+
+  /*
+  ofstream myfile (fileobj);
+  if (myfile.is_open()){
+    for(int i=0;i < (int)this->code.size();i++){
+      myfile<<this->code[i];
+      myfile<<"\n";
+    }
+    myfile.close();
+  }else cout << "Unable to open the object file (file.obj).";
+  */
+
+}
+
 int main(int argc, char* argv[])
 {
   if(argc<0){
@@ -1705,5 +1739,7 @@ int main(int argc, char* argv[])
   if(error==1) return 0;
   com.firstPass();
   com.secondPass();
+
+  com.writeOutput(fileName);
   return 0;
 }
