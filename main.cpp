@@ -51,7 +51,7 @@ class Compiler
     void getCode(string name);
     void preprocessing();
       void getMacro(string line,int *i);
-      void expMacro(string line,int *i);
+      void expMacro(string line, int *i, int j);
       void equIf(string line);
       string brokenLabel(string line, int *i);
     void errorTreatment();
@@ -62,8 +62,7 @@ class Compiler
     void firstPass();
     void secondPass();
 
-
-    std::vector<string> codeRaw, code;
+    std::vector<string> codeRaw, code, temp;
     std::vector<string> originalCodeLine;
     std::vector<vector<string> > macrotable, equIfTable;
     string instructions[14] =
@@ -112,18 +111,17 @@ void Compiler::getCode(string name)
 void Compiler::getMacro(string line,int *i){
   std::size_t found = line.find(":");
   std::vector<string> temp1;
-  string name;
+  string name,args;
   int index = *i+1;
   int j = 0;
   if(found != string::npos){
     name.append(line, 0, found);
     found = line.find("&");
     if(found!=string::npos){//Arguments not equal to zero
-        name+=" ";
-        name.append(line, found, line.length());
-        //cout<< name << endl;
-    }
+        args.append(line, found+1, line.length());
+    }else args = " ";
     temp1.push_back(name);
+    temp1.push_back(args);
     for(; index <= this->codeRaw.size(); index++){
         line = this->codeRaw[index];
         if(line[0]==32){
@@ -145,19 +143,33 @@ void Compiler::getMacro(string line,int *i){
   }else cout<< "Macro definition error! Miss ':' marker at line %d." << index-1 << endl;
 }
 
-void Compiler::expMacro(string line,int *i){
-  //cout<< "oi "<<endl;
-  //cout<< this->macrotable[0][0] << endl;
-  /*int j = i;
-  for(;j < (int)this->codeRaw.size() ; j++){
-      for(int k = 0; k < this->codeRaw[j].length(); k++){
-          if((int) this->codeRaw[j][k] >= 33) break;
-      }
-  }
-  i=j;
-  cout << this->codeRaw[j] << endl;
-  */
+void Compiler::expMacro(string line, int *i, int j){
+  int index = *i;
+  string macroName;
+  std::size_t found = line.find(" ");
+  std::size_t found2,error;
 
+  for(int k = 0; k < (int)this->macrotable.size(); k++)cout<< this->macrotable[k][0] << endl; //[collum][row]
+  if(found!= std::string::npos)macroName.append(line, 0,found);
+  else macroName = line;
+  if(macroName.length() == line.length()){ // None arguments
+    for(int k = 2; k < (int)this->macrotable[j].size(); k++){
+      this->temp.push_back(this->macrotable[j][k]);
+    }
+  }else{
+    found = line.find(",");
+    found2 = line.find(",", found+1);
+    error = line.find(",", found2+1);
+    if(error!=std::string::npos){
+      cout<< "[ERROR] Macro with more than 3 arguments at line %d" << index << endl;
+      // QUIT
+    }
+    if(found2 == std::string::npos){// two arguments
+      
+    }else{//thre arguments
+
+    }
+  }
 }
 string Compiler::brokenLabel(string line, int *i){
   std::size_t found = line.find(":");
@@ -206,7 +218,6 @@ void Compiler::preprocessing()
 {
   string line;
   int control = 1;
-  std::vector<string> temp;
   int j = 0;
   for(int i = 0; i < this->codeRaw.size() ; i++){
     line = this->codeRaw[i];
@@ -220,14 +231,21 @@ void Compiler::preprocessing()
       if(line.find("MACRO") != std::string::npos){
           this->getMacro(line, &i);
           control = 0;
-      }
-      // Macro expansion
-      for(int j = 0; j < (int)this->macrotable.size(); j++){
-        if(line.find(this->macrotable[0][j])){
-          this->expMacro(line, &i);
-          break;
+      }else{
+        // Macro expansion
+        string macroName;
+        std::size_t found = line.find(" ");
+        if(found!= std::string::npos)macroName.append(line, 0,found);
+        else macroName = line;
+        for(int j = 0; j < (int)this->macrotable.size(); j++){
+          if(macroName.find(this->macrotable[j][0])!= std::string::npos){
+            this->expMacro(line, &i, j);
+            control = 0;
+            break;
+          }
         }
       }
+
       if(line.find(":") != std::string::npos && !sectionData){
         line = this->brokenLabel(line, &i);
       }
@@ -245,9 +263,9 @@ void Compiler::preprocessing()
           j++;
         }
 
-        string temp = this->equIfTable[j][1];
+        string aux = this->equIfTable[j][1];
 
-        if(int(temp[0]) == 48){ // EQU 0
+        if(int(aux[0]) == 48){ // EQU 0
           i++;
         }
         control = 0;
@@ -265,19 +283,19 @@ void Compiler::preprocessing()
           line = instruction;
       }
       if(!line.empty() && control){// Qualquer linha ou EQU 1
-          temp.push_back(line);
+          this->temp.push_back(line);
       }
 
     }
   }
   for(control = 0;control<temp.size();control++){
-    line = temp[control];
+    line = this->temp[control];
     if(line.find("SECTION TEXT") != std::string::npos){
       break;
     }
   }
 
-  for(int i = control; i < temp.size(); i++) this->code.push_back(temp[i]);
+  for(int i = control; i < this->temp.size(); i++) this->code.push_back(this->temp[i]);
   cout<<"\n\n      CODE CORRECTED:"<< endl;
   for(int i = 0; i < this->code.size() ; i++) cout<<this->code[i]<<endl;
 }
