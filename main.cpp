@@ -7,8 +7,11 @@
 #include <string>
 #include <cstring>
 #include <typeinfo>
+#include <cstdio>
+#include <cctype>
+#include <cstdlib>
 
-// GENERIC TOKEN TYPE -> used in genericType
+// GENERIC TYPE OF TOKEN: -> used in genericType
 #define MNEMONIC    1
 #define LABEL       2
 #define DIRECTIVE   3
@@ -17,8 +20,8 @@
 #define COMMA       6
 #define PLUS        7
 #define AMPERSAND   8
-//SPECIFIC TOKEN INFORMATION -> used in specificInfo
-//OPERANDS:
+//SPECIFIC INFORMATION OF TOKEN: -> used in specificInfo
+//-OPERANDS:
 #define ADD             1
 #define SUB             2
 #define MULT            3
@@ -34,7 +37,7 @@
 #define OUTPUT          13
 #define STOP            14
 #define BASIC_OPERAND   15   // FOR , + &
-//DIRECTIVES
+//-DIRECTIVES
 #define SECTION   1
 #define SPACE     2
 #define CON       3  // CONST
@@ -48,27 +51,6 @@ using namespace std;
 class Compiler
 {
   public:
-    void getCode(string name);
-    void preprocessing();
-      void getMacro(string line,int *i);
-      void expMacro(string line, int *i, int j);
-      void equIf(string line);
-      string brokenLabel(string line, int *i);
-    void errorTreatment();
-      void scaner();//lexic error
-      void parser();//sintatic error
-      void semananticErrorDetection();
-      void semanticErrorTreat();
-    void firstPass();
-    void secondPass();
-
-    std::vector<string> codeRaw, code, temp;
-    std::vector<string> originalCodeLine;
-    std::vector<vector<string> > macrotable, equIfTable;
-    string instructions[14] =
-    {"ADD","SUB","MULT","DIV","JUMP","JUMPN","JUMPP","JUMPZ","COPY","LOAD","STORE","INPUT","OUTPUT","STOP"};
-    int sectionData = 0, sectionText = 0;
-
     struct Token {
       std::string token;
       int lineNumber;
@@ -86,9 +68,54 @@ class Compiler
     typedef struct Symbol Symbol;
 
     std::vector<Token> tokenTable, labelTable;
+		vector<Token>::iterator data_it;
     std::vector<Symbol> symbleTable;
     std::vector<int> object;
+
+
+    void getCode(string name);
+    void preprocessing();
+      void getMacro(string line,int *i);
+      void expMacro(string line,int *i);
+      void equIf(string line);
+      string brokenLabel(string line, int *i);
+				int		
+    
+      void scaner();//lexic error
+      
+        void markSintaxError(vector<Token>::iterator it);
+       	int parserMnemonic(vector<Token>::iterator it);
+        int parserDirective(vector<Token>::iterator it);
+        int parserOperand(vector<Token>::iterator it);
+        int parserConst(vector<Token>::iterator it);
+        int parserAmpersand(vector<Token>::iterator it);
+        int parserLabel(vector<Token>::iterator it);
+			void parser();//sintatic error
+				
+				int duplicateLabel ();
+				int sectionPlacement ();
+				int checkSymbolsFromData();
+				int checkForDataNeed();
+				int defasLabel();
+				int invalidLabel();
+				int noLabel();
+				int labelExist();
+				int wrongSection();
+      void semanticErrorTreat();
+			
+    void firstPass();
+    void secondPass();
+
+
+    std::vector<string> codeRaw, code;
+    std::vector<string> originalCodeLine;
+    std::vector<vector<string> > macrotable, equIfTable;
+    string instructions[14] =
+    {"ADD","SUB","MULT","DIV","JUMP","JUMPN","JUMPP","JUMPZ","COPY","LOAD","STORE","INPUT","OUTPUT","STOP"};
+    int sectionData = 0, sectionText = 0, hasdatasec=0;//, error = 0;
+
 };
+int error=0;
 
 void Compiler::getCode(string name)
 {
@@ -111,17 +138,18 @@ void Compiler::getCode(string name)
 void Compiler::getMacro(string line,int *i){
   std::size_t found = line.find(":");
   std::vector<string> temp1;
-  string name,args;
+  string name;
   int index = *i+1;
   int j = 0;
   if(found != string::npos){
     name.append(line, 0, found);
     found = line.find("&");
     if(found!=string::npos){//Arguments not equal to zero
-        args.append(line, found+1, line.length());
-    }else args = " ";
+        name+=" ";
+        name.append(line, found, line.length());
+        //cout<< name << endl;
+    }
     temp1.push_back(name);
-    temp1.push_back(args);
     for(; index <= this->codeRaw.size(); index++){
         line = this->codeRaw[index];
         if(line[0]==32){
@@ -143,33 +171,19 @@ void Compiler::getMacro(string line,int *i){
   }else cout<< "Macro definition error! Miss ':' marker at line %d." << index-1 << endl;
 }
 
-void Compiler::expMacro(string line, int *i, int j){
-  int index = *i;
-  string macroName;
-  std::size_t found = line.find(" ");
-  std::size_t found2,error;
-
-  for(int k = 0; k < (int)this->macrotable.size(); k++)cout<< this->macrotable[k][0] << endl; //[collum][row]
-  if(found!= std::string::npos)macroName.append(line, 0,found);
-  else macroName = line;
-  if(macroName.length() == line.length()){ // None arguments
-    for(int k = 2; k < (int)this->macrotable[j].size(); k++){
-      this->temp.push_back(this->macrotable[j][k]);
-    }
-  }else{
-    found = line.find(",");
-    found2 = line.find(",", found+1);
-    error = line.find(",", found2+1);
-    if(error!=std::string::npos){
-      cout<< "[ERROR] Macro with more than 3 arguments at line %d" << index << endl;
-      // QUIT
-    }
-    if(found2 == std::string::npos){// two arguments
-      
-    }else{//thre arguments
-
-    }
+void Compiler::expMacro(string line,int *i){
+  //cout<< "oi "<<endl;
+  //cout<< this->macrotable[0][0] << endl;
+  /*int j = i;
+  for(;j < (int)this->codeRaw.size() ; j++){
+      for(int k = 0; k < this->codeRaw[j].length(); k++){
+          if((int) this->codeRaw[j][k] >= 33) break;
+      }
   }
+  i=j;
+  cout << this->codeRaw[j] << endl;
+  */
+
 }
 string Compiler::brokenLabel(string line, int *i){
   std::size_t found = line.find(":");
@@ -218,6 +232,7 @@ void Compiler::preprocessing()
 {
   string line;
   int control = 1;
+  std::vector<string> temp;
   int j = 0;
   for(int i = 0; i < this->codeRaw.size() ; i++){
     line = this->codeRaw[i];
@@ -231,21 +246,14 @@ void Compiler::preprocessing()
       if(line.find("MACRO") != std::string::npos){
           this->getMacro(line, &i);
           control = 0;
-      }else{
-        // Macro expansion
-        string macroName;
-        std::size_t found = line.find(" ");
-        if(found!= std::string::npos)macroName.append(line, 0,found);
-        else macroName = line;
-        for(int j = 0; j < (int)this->macrotable.size(); j++){
-          if(macroName.find(this->macrotable[j][0])!= std::string::npos){
-            this->expMacro(line, &i, j);
-            control = 0;
-            break;
-          }
+      }
+      // Macro expansion
+      for(int j = 0; j < (int)this->macrotable.size(); j++){
+        if(line.find(this->macrotable[0][j])){
+          this->expMacro(line, &i);
+          break;
         }
       }
-
       if(line.find(":") != std::string::npos && !sectionData){
         line = this->brokenLabel(line, &i);
       }
@@ -263,9 +271,9 @@ void Compiler::preprocessing()
           j++;
         }
 
-        string aux = this->equIfTable[j][1];
+        string temp = this->equIfTable[j][1];
 
-        if(int(aux[0]) == 48){ // EQU 0
+        if(int(temp[0]) == 48){ // EQU 0
           i++;
         }
         control = 0;
@@ -283,38 +291,1235 @@ void Compiler::preprocessing()
           line = instruction;
       }
       if(!line.empty() && control){// Qualquer linha ou EQU 1
-          this->temp.push_back(line);
+          temp.push_back(line);
       }
 
     }
   }
   for(control = 0;control<temp.size();control++){
-    line = this->temp[control];
+    line = temp[control];
     if(line.find("SECTION TEXT") != std::string::npos){
       break;
     }
   }
 
-  for(int i = control; i < this->temp.size(); i++) this->code.push_back(this->temp[i]);
+  for(int i = control; i < temp.size(); i++) this->code.push_back(temp[i]);
   cout<<"\n\n      CODE CORRECTED:"<< endl;
   for(int i = 0; i < this->code.size() ; i++) cout<<this->code[i]<<endl;
 }
 
 //////////////////////////////////////////////////
-////////////////////////////////////// FIRST PASS
+////////////////////////////////////// SCANER
 //////////////////////////////////////////////////
 
 void Compiler::scaner(){
 
 }
+
+//////////////////////////////////////////////////
+////////////////////////////////////// PARSER
+//////////////////////////////////////////////////
+
+void Compiler::markSintaxError(vector<Token>::iterator it){
+  int i = it->lineNumber;
+    vector<Token>::iterator newit;
+    newit = it;
+    while (newit->lineNumber == i){
+        newit--;
+    }
+    newit++;
+    while (newit->lineNumber == i){
+        newit->flag = -1;
+        newit++;
+    }
+}
+
+int Compiler::parserMnemonic(vector<Token>::iterator it){
+  int targetLine, count;
+
+  targetLine = it->lineNumber;
+	switch (it->specificInfo){
+  case ADD:
+  case SUB:
+  case MULT:
+  case DIV:
+  case JMP:
+  case JMPN:
+  case JMPP:
+  case JMPZ:
+  case LOAD:
+  case STORE:
+  case INPUT:
+  case OUTPUT:
+    it++; count++;
+    if (it != tokenTable.end() && targetLine == it->lineNumber ){// check if argument exists.
+      if (it->genericType == AMPERSAND) {// ignores argument indicator.
+        it++; count++;
+        if(it == tokenTable.end() || targetLine != it->lineNumber){
+          cerr << "Sintax Error @ Line " << targetLine << " -missing argument." << endl;
+				  markSintaxError(it);
+				  error = 1;
+				  it->flag = -1;
+          
+        }
+      }
+      if(it->genericType == OPERAND){  // check if valid argument.
+        it++; count++;
+        if (it != tokenTable.end() && targetLine == it->lineNumber ){ // check extra operation.
+          if(it->genericType ==PLUS){  // check if valid operation +.
+            it++; count++;
+            if (it != tokenTable.end() && targetLine == it->lineNumber ){ // check if + argument exist.
+              if(it->genericType ==CONST){  // check if + valid argument.
+                it++; count++;
+                if (it != tokenTable.end() && targetLine == it->lineNumber ){ // check if too much arguments.
+                  cerr << "Sintax Error @ Line " << targetLine << " - invalid argument." << endl;
+				          markSintaxError(it);
+				          error = 1;
+				          it->flag = -1;
+                  do{ // get out of line.
+                    it++; count++;
+                  }while(it != tokenTable.end() && targetLine == it->lineNumber);
+                }
+              }else {
+                cerr << "Sintax Error @ Line " << targetLine << " - invalid argument." << endl;
+				        markSintaxError(it);
+				        error = 1;
+				        it->flag = -1;
+                do{ // get out of line.
+                  it++; count++;
+                }while(it != tokenTable.end() && targetLine == it->lineNumber);
+              }              
+            }else{
+              cerr << "Sintax Error @ Line " << targetLine << " - missing argument." << endl;
+				      markSintaxError(it);
+				      error = 1;
+				      it->flag = -1;
+            }   
+          }else {
+            cerr << "Sintax Error @ Line " << targetLine << " - invalid argument." << endl;
+				    markSintaxError(it);
+				    error = 1;
+				    it->flag = -1;
+            do{ // get out of line.
+              it++; count++;
+            }while(it != tokenTable.end() && targetLine == it->lineNumber);
+          }
+        }        
+      }else{
+        cerr << "Sintax Error @ Line " << targetLine << " - invalid argument." << endl;
+        markSintaxError(it);
+        error = 1;
+        it->flag = -1;
+        do{ // get out of line.
+          it++; count++;
+        }while(it != tokenTable.end() && targetLine == it->lineNumber);
+      }
+    } else {
+				cerr << "Sintax Error @ Line " << targetLine << " - missing argument." << endl;
+				markSintaxError(it);
+				error = 1;
+				it->flag = -1;
+    }
+  break;
+  
+  case COPY:
+      it++; count++;
+			if (it != tokenTable.end() && targetLine == it->lineNumber){	// check if arguments exists.
+
+				// first argument.
+				if (it->genericType == AMPERSAND){		// ignores argument indicator.
+					it++; count++;
+					if (it == tokenTable.end() || targetLine != it->lineNumber){
+						markSintaxError(it);
+						error = 1;
+						it->flag = -1;
+						cerr << "Sintax Error @ Line " << targetLine << " - missing argument." << endl;
+					}
+				}
+				if (it->genericType == OPERAND){										// check if valid argument.
+					it++; count++;
+					if (it != tokenTable.end() && targetLine == it->lineNumber){	// check if next argument exist.
+						if (it->genericType == PLUS){									// check if it is + operation.
+							it++; count++;
+							if (it != tokenTable.end() && targetLine == it->lineNumber){	// check if + argument exist.
+								if (it->genericType == CONST){									// check if + valid argument.
+									it++; count++;
+									if (it == tokenTable.end() || targetLine != it->lineNumber){	// check if next argument exist.
+										cerr << "Sintax Error @ Line " << targetLine << " - missing argument." << endl;
+										markSintaxError(it);
+										error = 1;
+										it->flag = -1;
+										break;		// get out of switch.
+									}
+								} else {
+									cerr << "Sintax Error @ Line " << targetLine << " - invalid argument." << endl;
+									markSintaxError(it);
+									error = 1;
+									it->flag = -1;
+									do {		// get out of line.
+										it++; count++;
+									} while(it != tokenTable.end() && targetLine == it->lineNumber);
+									break;		// get out of switch.
+								}
+							} else {
+								cerr << "Sintax Error @ Line " << targetLine << " - missing argument." << endl;
+								markSintaxError(it);
+								error = 1;
+								it->flag = -1;
+								break;		// get out of switch.
+							}
+						}
+					} else {
+						cerr << "Sintax Error @ Line " << targetLine << " - missing argument." << endl;
+						markSintaxError(it);
+						error = 1;
+						it->flag = -1;
+						break;		// get out of switch.
+					}
+				} else {
+					cerr << "Sintax Error @ Line " << targetLine << " - invalid argument." << endl;
+					markSintaxError(it);
+					error = 1;
+					it->flag = -1;
+					do {		// get out of line.
+						it++; count++;
+					} while(it != tokenTable.end() && targetLine == it->lineNumber);
+					break;		// get out of switch.
+				}
+
+				// comma argument.
+				if (it->genericType == COMMA){									// check if valid argument.
+					it++; count++;
+					if (it == tokenTable.end() || targetLine != it->lineNumber){	// check if next argument exist.
+						cerr << "Sintax Error @ Line " << targetLine << " - missing argument." << endl;
+						markSintaxError(it);
+						error = 1;
+						it->flag = -1;
+						break;		// get out of switch.
+					}
+				} else {
+					cerr << "Sintax Error @ Line " << targetLine << " - invalid argument." << endl;
+					markSintaxError(it);
+					error = 1;
+					it->flag = -1;
+					do {		// get out of line.
+						it++; count++;
+					} while(it != tokenTable.end() && targetLine == it->lineNumber);
+					break;
+				}
+
+				// second argument.
+				if (it->genericType == AMPERSAND){		// ignores argument indicator.
+					it++; count++;
+					if (it == tokenTable.end() || targetLine != it->lineNumber){
+						markSintaxError(it);
+										error = 1;
+										it->flag = -1;
+						cerr << "Sintax Error @ Line " << targetLine << " - missing argument." << endl;
+					}
+				}
+				if (it->genericType == OPERAND){										// check if valid argument.
+					it++; count++;
+					if (it != tokenTable.end() && targetLine == it->lineNumber){	// check extra operation.
+						if (it->genericType == PLUS){											// check if valid operation +.
+							it++; count++;
+							if (it != tokenTable.end() && targetLine == it->lineNumber){			// check if + argument exist.
+								if (it->genericType == CONST){											// check if + valid argument.
+									it++; count++;
+									if (it != tokenTable.end() && targetLine == it->lineNumber){	// check if too much arguments.
+										cerr << "Sintax Error @ Line " << targetLine << " - invalid argument." << endl;
+										markSintaxError(it);
+										error = 1;
+										it->flag = -1;
+										do {		// get out of line.
+											it++; count++;
+										} while(it != tokenTable.end() && targetLine == it->lineNumber);
+									}
+								} else {
+									cerr << "Sintax Error @ Line " << targetLine << " - invalid argument." << endl;
+									markSintaxError(it);
+									error = 1;
+									it->flag = -1;
+									do {		// get out of line.
+										it++; count++;
+									} while(it != tokenTable.end() && targetLine == it->lineNumber);
+								}
+							} else {
+								cerr << "Sintax Error @ Line " << targetLine << " - missing argument." << endl;
+								markSintaxError(it);
+								error = 1;
+								it->flag = -1;
+							}
+						} else {
+							cerr << "Sintax Error @ Line " << targetLine << " - invalid argument." << endl;
+							markSintaxError(it);
+							error = 1;
+							it->flag = -1;
+							do {		// get out of line.
+								it++; count++;
+							} while(it != tokenTable.end() && targetLine == it->lineNumber);
+						}
+					}
+				} else {
+					cerr << "Sintax Error @ Line " << targetLine << " - invalid argument." << endl;
+					markSintaxError(it);
+					error = 1;
+					it->flag = -1;
+					do {		// get out of line.
+						it++; count++;
+					} while(it != tokenTable.end() && targetLine == it->lineNumber);
+				}
+
+			} else {
+				cerr << "Sintax Error @ Line " << targetLine << " - missing argument." << endl;
+				markSintaxError(it);
+				error = 1;
+				it->flag = -1;
+			}
+  break;
+  
+  case STOP:
+    it++; count++;
+    if (it != tokenTable.end() && targetLine == it->lineNumber ){ // check if too much arguments.
+      cerr << "Sintax Error @ Line " << targetLine << " - unexpected argument." << endl;
+			markSintaxError(it);
+			error = 1;
+			it->flag = -1;
+      do{ // get out of line.
+        it++; count++;
+      }while(it != tokenTable.end() && targetLine == it->lineNumber);
+    }
+  break;
+  
+  default:
+    cerr << "Parser: unknowm mnemonic type (" << it->token << ")." << endl;
+    markSintaxError(it);
+    error=1;
+    it->flag = -1;
+    it++; count++;
+  break;
+  }
+
+  return count;
+}
+
+int Compiler::parserDirective(vector<Token>::iterator it){
+	int targetLine, count;
+
+	targetLine = it->lineNumber;
+	switch (it->specificInfo){
+		case SECTION:
+			it++; count++;
+			if (it != tokenTable.end() && targetLine == it->lineNumber){										// check if arguments exists.
+				if (it->genericType == DIRECTIVE && (it->specificInfo == TEXT || it->specificInfo == DATA)){	// check if argument is valid.
+					it++; count++;
+					if (it != tokenTable.end() && targetLine == it->lineNumber){								// check if too much arguments.
+						cerr << "Sintax Error @ Line " << targetLine << " - invalid argument." << endl;
+						markSintaxError(it);
+						error = 1;
+						it->flag = -1;
+						do {		// get out of line.
+							it++; count++;
+						} while(it != tokenTable.end() && targetLine == it->lineNumber);
+					}
+				} else {
+					cerr << "Sintax Error @ Line " << targetLine << " - invalid argument." << endl;
+					markSintaxError(it);
+					error = 1;
+					it->flag = -1;
+					do {		// get out of line.
+						it++; count++;
+					} while(it != tokenTable.end() && targetLine == it->lineNumber);
+				}
+			} else {
+				cerr << "Sintax Error @ Line " << targetLine << " - missing argument." << endl;
+				markSintaxError(it);
+				error = 1;
+				it->flag = -1;
+			}
+		break;
+
+		case SPACE:
+			it++; count++;
+			if (it != tokenTable.end() && targetLine == it->lineNumber){			// check if argument exist.
+				if (it->genericType == CONST && it->specificInfo > 0){											// check if argument is valid
+					it++; count++;
+					if (it != tokenTable.end() && targetLine == it->lineNumber){	// check if too much arguments.
+						cerr << "Sintax Error @ Line " << targetLine << " - invalid argument." << endl;
+						markSintaxError(it);
+						error = 1;
+						it->flag = -1;
+						do {		// get out of line.
+							it++; count++;
+						} while(it != tokenTable.end() && targetLine == it->lineNumber);
+					}
+				} else {
+					cerr << "Sintax Error @ Line " << targetLine << " - invalid argument." << endl;
+					markSintaxError(it);
+					error = 1;
+					it->flag = -1;
+					do {		// get out of line.
+						it++; count++;
+					} while(it != tokenTable.end() && targetLine == it->lineNumber);
+				}
+			}
+		break;
+
+		case CON:
+			it++; count++;
+			if (it != tokenTable.end() && targetLine == it->lineNumber){			// check if argument exist.
+				if (it->genericType == CONST){											// check if argument is valid
+					it++; count++;
+					if (it != tokenTable.end() && targetLine == it->lineNumber){	// check if too much arguments.
+						cerr << "Sintax Error @ Line " << targetLine << " - invalid argument." << endl;
+						markSintaxError(it);
+						error = 1;
+						it->flag = -1;
+						do {		// get out of line.
+							it++; count++;
+						} while(it != tokenTable.end() && targetLine == it->lineNumber);
+					}
+				} else {
+					cerr << "Sintax Error @ Line " << targetLine << " - invalid argument." << endl;
+					markSintaxError(it);
+					error = 1;
+					it->flag = -1;
+					do {		// get out of line.
+						it++; count++;
+					} while(it != tokenTable.end() && targetLine == it->lineNumber);
+				}
+			} else {
+				cerr << "Sintax Error @ Line " << targetLine << " - missing argument." << endl;
+				markSintaxError(it);
+				error = 1;
+				it->flag = -1;
+			}
+		break;
+
+    case TEXT:
+		case DATA:
+			cerr << "Sintax Error @ Line " << targetLine << " - invalid use of directive." << endl;
+			markSintaxError(it);
+			error = 1;
+			it->flag = -1;
+			do {		// get out of line.
+				it++; count++;
+			} while(it != tokenTable.end() && targetLine == it->lineNumber);
+		break;
+
+		/*case IF:
+			it++; count++;
+			if (it != tokenTable.end() && targetLine == it->lineNumber){			// check if argument exist.
+				if (it->genericType == AMPERSAND){		// ignores argument indicator.
+					it++; count++;
+					if (it == tokenTable.end() || targetLine != it->lineNumber){
+						markSintaxError(it);
+										error = 1;
+										it->flag = -1;
+						cerr << "Sintax Error @ Line " << targetLine << " - missing argument." << endl;
+					}
+				}
+				if (it->genericType == CONST || it->genericType == OPERAND){				// check if argument is valid
+					it++; count++;
+					if (it != tokenTable.end() && targetLine == it->lineNumber){	// check if too much arguments.
+						cerr << "Sintax Error @ Line " << targetLine << " - invalid argument." << endl;
+						markSintaxError(it);
+						error = 1;
+						it->flag = -1;
+						do {		// get out of line.
+							it++; count++;
+						} while(it != tokenTable.end() && targetLine == it->lineNumber);
+					}
+				} else {
+					cerr << "Sintax Error @ Line " << targetLine << " - invalid argument." << endl;
+					markSintaxError(it);
+					error = 1;
+					it->flag = -1;
+					do {		// get out of line.
+						it++; count++;
+					} while(it != tokenTable.end() && targetLine == it->lineNumber);
+				}
+			} else {
+				cerr << "Sintax Error @ Line " << targetLine << " - missing argument." << endl;
+				markSintaxError(it);
+				error = 1;
+				it->flag = -1;
+			}
+		break;*/
+
+		/*case MACRO:
+			it++; count++;
+			// first argument.
+			if (it != tokenTable.end() && targetLine == it->lineNumber){		// check if argument exist.
+				if (it->genericType == AMPERSAND){							// check argument operator.
+					it++; count++;
+					if (it != tokenTable.end() && targetLine == it->lineNumber){	// check if argument is present.
+						if (it->genericType == OPERAND){								// check if argument is valid.
+							it++; count++;
+						} else {
+							markSintaxError(it);
+										error = 1;
+										it->flag = -1;
+							cerr << "Sintax Error @ Line " << targetLine << " - invalid argument." << endl;
+							do {		// get out of line.
+								it++; count++;
+							} while(it != tokenTable.end() && targetLine == it->lineNumber);
+							break;
+						}
+					} else {
+						markSintaxError(it);
+										error = 1;
+										it->flag = -1;
+						cerr << "Sintax Error @ Line " << targetLine << " - missing argument." << endl;
+						break;
+					}
+				} else {
+					markSintaxError(it);
+										error = 1;
+										it->flag = -1;
+					cerr << "Sintax Error @ Line " << targetLine << " - invalid argument." << endl;
+					do {		// get out of line.
+						it++; count++;
+					} while(it != tokenTable.end() && targetLine == it->lineNumber);
+					break;
+				}
+			} else {
+				break;
+			}
+
+			// second argument.
+			if (it != tokenTable.end() && targetLine == it->lineNumber){		// check if argument exist.
+				if (it->genericType == COMMA){								// check argument separator indicator.
+					it++; count++;
+					if (it == tokenTable.end() || targetLine != it->lineNumber){
+						markSintaxError(it);
+										error = 1;
+										it->flag = -1;
+						cerr << "Sintax Error @ Line " << targetLine << " - missing argument." << endl;
+						break;
+					}
+				} else {
+					markSintaxError(it);
+										error = 1;
+										it->flag = -1;
+					cerr << "Sintax Error @ Line " << targetLine << " - invalid argument." << endl;
+					do {		// get out of line.
+						it++; count++;
+					} while(it != tokenTable.end() && targetLine == it->lineNumber);
+					break;
+				}
+				if (it->genericType == AMPERSAND){							// check argument operator.
+					it++; count++;
+					if (it != tokenTable.end() && targetLine == it->lineNumber){	// check if argument is present.
+						if (it->genericType == OPERAND){								// check if argument is valid.
+							it++; count++;
+						} else {
+							markSintaxError(it);
+										error = 1;
+										it->flag = -1;
+							cerr << "Sintax Error @ Line " << targetLine << " - invalid argument." << endl;
+							do {		// get out of line.
+								it++; count++;
+							} while(it != tokenTable.end() && targetLine == it->lineNumber);
+							break;
+						}
+					} else {
+						markSintaxError(it);
+										error = 1;
+										it->flag = -1;
+						cerr << "Sintax Error @ Line " << targetLine << " - missing argument." << endl;
+						break;
+					}
+				} else {
+					markSintaxError(it);
+										error = 1;
+										it->flag = -1;
+					cerr << "Sintax Error @ Line " << targetLine << " - invalid argument." << endl;
+					do {		// get out of line.
+						it++; count++;
+					} while(it != tokenTable.end() && targetLine == it->lineNumber);
+					break;
+				}
+			} else {
+				break;
+			}
+
+			// third argument.
+			if (it != tokenTable.end() && targetLine == it->lineNumber){		// check if argument exist.
+				if (it->genericType == COMMA){								// check argument separator indicator.
+					it++; count++;
+					if (it == tokenTable.end() || targetLine != it->lineNumber){
+						markSintaxError(it);
+										error = 1;
+										it->flag = -1;
+						cerr << "Sintax Error @ Line " << targetLine << " - missing argument." << endl;
+						break;
+					}
+				} else {
+					markSintaxError(it);
+										error = 1;
+										it->flag = -1;
+					cerr << "Sintax Error @ Line " << targetLine << " - invalid argument." << endl;
+					do {		// get out of line.
+						it++; count++;
+					} while(it != tokenTable.end() && targetLine == it->lineNumber);
+					break;
+				}
+				if (it->genericType == AMPERSAND){							// check argument operator.
+					it++; count++;
+					if (it != tokenTable.end() && targetLine == it->lineNumber){	// check if argument is present.
+						if (it->genericType == OPERAND){								// check if argument is valid.
+							it++; count++;
+						} else {
+							markSintaxError(it);
+										error = 1;
+										it->flag = -1;
+							cerr << "Sintax Error @ Line " << targetLine << " - invalid argument." << endl;
+							do {		// get out of line.
+								it++; count++;
+							} while(it != tokenTable.end() && targetLine == it->lineNumber);
+							break;
+						}
+					} else {
+						markSintaxError(it);
+										error = 1;
+										it->flag = -1;
+						cerr << "Sintax Error @ Line " << targetLine << " - missing argument." << endl;
+						break;
+					}
+				} else {
+					markSintaxError(it);
+										error = 1;
+										it->flag = -1;
+					cerr << "Sintax Error @ Line " << targetLine << " - invalid argument." << endl;
+					do {		// get out of line.
+						it++; count++;
+					} while(it != tokenTable.end() && targetLine == it->lineNumber);
+					break;
+				}
+			} else {
+				break;
+			}
+
+			if (it != tokenTable.end() && targetLine == it->lineNumber){		// check if too much arguments.
+				markSintaxError(it);
+										error = 1;
+										it->flag = -1;
+				cerr << "Sintax Error @ Line " << targetLine << " - invalid argument." << endl;
+				do {		// get out of line.
+					it++; count++;
+				} while(it != tokenTable.end() && targetLine == it->lineNumber);
+			}
+		break;*/
+
+		/*case END:
+			it++; count++;
+			if (it != tokenTable.end() && targetLine == it->lineNumber){		// check if argument exist.
+				markSintaxError(it);
+										error = 1;
+										it->flag = -1;
+				cerr << "Sintax Error @ Line " << targetLine << " - invalid argument." << endl;
+				do {		// get out of line.
+					it++; count++;
+				} while(it != tokenTable.end() && targetLine == it->lineNumber);
+			}
+		break;*/
+
+		
+		/*case EQU:	// if found in this stage, it must be an invalid EQU.
+			do {		// get out of line.
+				it++; count++;
+			} while(it != tokenTable.end() && targetLine == it->lineNumber);
+		break;*/
+
+		default:
+			cerr << "Parser: unknowm directive token (" << it->token << ")." << endl;
+			markSintaxError(it);
+			error = 1;
+			it->flag = -1;
+			it++; count++;
+		break;
+	}
+
+	return count;
+}
+
+/*int Compiler::parserOperand  (vector<Token>::iterator it){
+  int targetLine, count;
+
+  targetLine = it->lineNumber;
+	// expects to be a macro calling.
+	it++; count++;
+	// first argument.
+	if (it != tokenTable.end() && targetLine == it->lineNumber){		// check if argument exist.
+		if (genericType == AMPERSAND){		// ignores argument indicator.
+			it++; count++;
+			if (it == tokenTable.end() || targetLine != it->lineNumber){
+				return count;
+			}
+		}
+		if (genericType == OPERAND){									// check if argument is valid.
+			it++; count++;
+		} else {
+			markSintaxError(it);
+			error = 1;
+			it->flag = -1;
+			cerr << "Sintax Error @ Line " << targetLine << " - invalid argument." << endl;
+			do {		// get out of line.
+				it++; count++;
+			} while(it != tokenTable.end() && targetLine == it->lineNumber);
+			return count;
+		}
+	} else {
+		return count;
+	}
+
+	// second argument.
+	if (it != tokenTable.end() && targetLine == it->lineNumber){		// check if argument exist.
+		if (genericType == COMMA){							// check argument separator operator.
+			it++; count++;
+			if (it != tokenTable.end() && targetLine == it->lineNumber){	// check if argument is present.
+				if (genericType == AMPERSAND){		// ignores argument indicator.
+					it++; count++;
+					if (it == tokenTable.end() || targetLine != it->lineNumber){
+						return count;
+					}
+				}
+				if (genericType == OPERAND){								// check if argument is valid.
+					it++; count++;
+				} else {
+					cerr << "Sintax Error @ Line " << targetLine << " - invalid argument." << endl;
+					markSintaxError(it);
+					error = 1;
+					it->flag = -1;
+					do {		// get out of line.
+						it++; count++;
+					} while(it != tokenTable.end() && targetLine == it->lineNumber);
+					return count;
+				}
+			} else {
+				markSintaxError(it);
+				error = 1;
+				it->flag = -1;
+				cerr << "Sintax Error @ Line " << targetLine << " - missing argument." << endl;
+				return count;
+			}
+		} else {
+			cerr << "Sintax Error @ Line " << targetLine << " - invalid argument." << endl;
+			markSintaxError(it);
+			error = 1;
+			it->flag = -1;
+			do {		// get out of line.
+				it++; count++;
+			} while(it != tokenTable.end() && targetLine == it->lineNumber);
+			return count;
+		}
+	} else {
+		return count;
+	}
+
+	// third argument.
+	if (it != tokenTable.end() && targetLine == it->lineNumber){		// check if argument exist.
+		if (genericType == COMMA){							// check argument separator operator.
+			it++; count++;
+			if (it != tokenTable.end() && targetLine == it->lineNumber){	// check if argument is present.
+				if (genericType == AMPERSAND){		// ignores argument indicator.
+					it++; count++;
+					if (it == tokenTable.end() || targetLine != it->lineNumber){
+						return count;
+					}
+				}
+				if (genericType == OPERAND){								// check if argument is valid.
+					it++; count++;
+				} else {
+					markSintaxError(it);
+          error = 1;
+          it->flag = -1;
+					cerr << "Sintax Error @ Line " << targetLine << " - invalid argument." << endl;
+					do {		// get out of line.
+						it++; count++;
+					} while(it != tokenTable.end() && targetLine == it->lineNumber);
+					return count;
+				}
+			} else {
+				markSintaxError(it);
+        error = 1;
+        it->flag = -1;
+				cerr << "Sintax Error @ Line " << targetLine << " - missing argument." << endl;
+				return count;
+			}
+		} else {
+			markSintaxError(it);
+      error = 1;
+      it->flag = -1;
+			cerr << "Sintax Error @ Line " << targetLine << " - invalid argument." << endl;
+			do {		// get out of line.
+				it++; count++;
+			} while(it != tokenTable.end() && targetLine == it->lineNumber);
+			return count;
+		}
+	} else {
+		return count;
+	}
+
+	if (it != tokenTable.end() && targetLine == it->lineNumber){		// check if too much arguments.
+		markSintaxError(it);
+    error = 1;
+    it->flag = -1;
+		cerr << "Sintax Error @ Line " << targetLine << " - invalid argument." << endl;
+		do {		// get out of line.
+			it++; count++;
+		} while(it != tokenTable.end() && targetLine == it->lineNumber);
+	}
+	return count;
+}*/
+
+int Compiler::parserConst(vector<Token>::iterator it){
+  int targetLine, count;
+  targetLine = it->lineNumber;
+
+  cerr << "Sintax Error @ Line " << targetLine << " - unexpected value." << endl;
+  markSintaxError(it);
+  error = 1;
+  it->flag = -1;
+	do {		// get out of line.
+		it++; count++;
+	} while(it != tokenTable.end() && targetLine == it->lineNumber);
+
+	return count;
+}
+
+int Compiler::parserAmpersand(vector<Token>::iterator it){
+  int targetLine, count;
+	targetLine = it->lineNumber;
+
+	it++; count++;
+	if (it == tokenTable.end() || targetLine != it->lineNumber){
+		markSintaxError(it);
+		error = 1;
+		it->flag = -1;
+		cerr << "Sintax Error @ Line " << targetLine << " - ." << endl;
+	}
+
+	return count;
+}
+
+int Compiler::parserLabel(vector<Token>::iterator it){
+	int targetLine, count;
+	targetLine = it->lineNumber;
+
+	it++; count++;
+	if (it == tokenTable.end() || targetLine != it->lineNumber){
+		markSintaxError(it);
+		error = 1;
+		it->flag = -1;
+		cerr << "Sintax Error @ Line " << targetLine << " - empty label." << endl;
+	} else {
+		if (it->genericType == LABEL){
+			markSintaxError(it);
+			error = 1;
+			it->flag = -1;
+			cerr << "Sintax Error @ Line " << targetLine << " - multiple labels in line." << endl;
+			do {		// get out of line.
+				it++; count++;
+			} while(it != tokenTable.end() && targetLine == it->lineNumber);
+		}
+	}
+
+	return count;
+}
+
 void Compiler::parser(){
+  vector<Token>::iterator it;
 
-}
-void Compiler::semananticErrorDetection(){
+  it = tokenTable.begin();
+  while (it != tokenTable.end())
+  {
+    switch (it->genericType){
+      case MNEMONIC:
+        advance(it,parserMnemonic(it));
+      break;
+    
+      case LABEL:
+        advance(it,parserLabel(it));
+      break;
+      
+      case DIRECTIVE:
+        advance(it,parserDirective(it));
+      break;
+      
+      /*case OPERAND:
+          advance(it,parserOperand(it));
+      break;*/
+      
+      case COMMA:
+      case PLUS:
+      case CONST:
+        advance(it,parserConst(it));
+      break;
+      
+      case AMPERSAND:
+        advance(it,parserAmpersand(it));
+      break;
 
+      default:
+        cerr << "Parser: unknowm token type (" << it->token << ")." << endl;
+        markSintaxError(it);
+        error=1;
+        it->flag = -1;
+        it++;
+      break;
+    }
+  }
+  
 }
+
+//////////////////////////////////////////////////
+////////////////////////////////////// SEMANTIC ANALYSIS
+//////////////////////////////////////////////////
+
+int Compiler::duplicateLabel (){ //ALTERAR PARA FUNCIONAR CORETAMENTE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
+	vector<Token>::iterator it, aux, end;//										T
+	int err = 0;//																						|
+ //																									  			|
+	end=labelTable.end();//																		|
+	//end--;              //stops loop one before  <-----------
+	for (it=labelTable.begin(); it != end; it++){
+			aux=it;
+			aux++;
+			while(aux != labelTable.end()){
+					if (it->token == aux->token){
+							cerr << "Semantic Error @ Line " << aux->lineNumber << " - multiple declarations of '" << aux->token <<"'." << endl;
+							cerr << "\t\tPrevious declaration @ line " << it->lineNumber << "." << endl;
+							error = 1;
+							err++;
+					}
+					aux++;
+			}
+	}
+	return err;
+	
+}
+
+int Compiler::sectionPlacement (){
+	vector<Token>::iterator it = tokenTable.begin();
+    int err = 0;
+    int count = 0;
+
+    while (it != tokenTable.end()){
+        if (it->genericType == DIRECTIVE && it->specificInfo == SECTION && it->flag != -1){     //if section
+            it++;
+            if (count == 0){    //if first section
+                if (!(it->genericType == DIRECTIVE && it->specificInfo == TEXT)){     //if not section text
+                    fprintf(stderr, "Semantic error @ line %d - Expected 'TEXT' section!\n", it->lineNumber);
+                    error = 1;
+                    err++;
+                }
+            }else if (count == 1 && err == 0){      //second section
+                if (!(it->genericType == DIRECTIVE && it->specificInfo == DATA)){     //not data section
+                    fprintf(stderr, "Semantic error @ line %d - Expected 'DATA' section!\n", it->lineNumber);
+                    error = 1;
+                    err++;
+                }else{
+                    data_it = it;
+                }
+            }else if (err == 0){    //third+ section
+                fprintf(stderr, "Semantic error @ line %d - Too many sections!\n", it->lineNumber);
+                error = 1;
+                err++;
+            }
+            count++;
+        }
+        it++;
+    }
+    if (it == tokenTable.end() && count == 0){   //no section
+        fprintf(stderr, "Semantic error - No section found!\n");
+        error = 1;
+        err++;
+    }
+    if (count == 2){
+        hasdatasec = 1;
+    }
+    return err;
+}
+
+int Compiler::checkSymbolsFromData(){
+    int err = 0;
+    int i =0,konst;
+    vector<Token>::iterator it, data_begin, aux,aux2;
+
+    for (it = tokenTable.begin(); it != tokenTable.end(); it++){
+        if (it->genericType == OPERAND && it->specificInfo != -1 && it->flag != -1){
+            for (data_begin = data_it; data_begin != tokenTable.end(); data_begin++){
+                if (data_begin->genericType == LABEL){
+                    if (data_begin->token.substr(0, data_begin->token.find(":")) == it->token){
+                        aux2=it;
+                        aux2++;
+
+                        if (aux2->genericType == PLUS && aux2->lineNumber == it->lineNumber)
+                        {
+                            aux2++;
+                            if (aux2->genericType == CONST && aux2->lineNumber == it->lineNumber)
+                            {
+                                konst = aux2->specificInfo;
+                                aux2 = data_begin;
+                                advance(aux2,2);
+                                if (aux2->genericType == CONST && aux2->lineNumber == data_begin->lineNumber && aux2->specificInfo <= konst){
+                                    fprintf(stderr, "Semantic error @ line %d -Argument '%s' not reserved in vector '%s' in DATA section.\n", it->lineNumber, it->token.c_str(), data_begin->token.c_str());
+                                    error = 1;
+                                    err++;                                    
+                                }
+                                
+                            }
+                        }
+                        data_begin->flag = 100;        //marks data flags that are related to an operand
+                        break;
+                    }
+                }
+            }
+            /*if (data_begin == tokenTable.end()){
+                aux = it;
+                aux--;
+                if (!(aux->genericType == MNEMONIC && (aux->specificInfo == JMP ||\
+                                                aux->specificInfo == JMPN ||\
+                                                aux->specificInfo == JMPP ||\
+                                                aux->specificInfo == JMPZ))){
+                    if (aux->lineNumber == it->lineNumber){
+                        for (aux = it; aux != tokenTable.begin(); aux--){
+                            if (aux->genericType == DIRECTIVE && aux->specificInfo == MACRO){
+                                i=1;
+                                break;
+                            }
+                        }
+                        for (aux = it; aux != tokenTable.begin(); aux++){
+                            if (aux->genericType == DIRECTIVE && aux->specificInfo == END){
+                                i++;
+                                break;
+                            }
+                        }
+                        if(i!=2){
+                            //cout << "Token: " << it->token << "..   \tLine: " << it->lineNumber << "   \tPosition in line: " << it->tokenPosInLin << "    \tType: " << it->genericType << "        \taddt_info: " << it->specificInfo << "    \tflag: " << it->flag << "     \tinfo str: " << it->info_str << endl;  //print list element
+                            fprintf(stderr, "Semantic error @ line %d - Argument '%s' not declared in DATA section.\n", it->lineNumber, it->token.c_str());
+                            error = 1;
+                            err++;
+                        }
+                    }
+                }
+            }*/
+        }
+    }
+    return err;
+}
+
+int Compiler::checkForDataNeed(){
+    int err = 0;
+    int i = 0;
+    vector<Token>::iterator it, aux;
+    for (it = tokenTable.begin(); it != tokenTable.end(); it++){
+        if (it->genericType == OPERAND && it->specificInfo != -1 && it->flag != -1){
+            aux = it;
+            aux--;
+            if (!(aux->genericType == MNEMONIC && (aux->specificInfo == JMP ||\
+                                            aux->specificInfo == JMPN ||\
+                                            aux->specificInfo == JMPP ||\
+                                            aux->specificInfo == JMPZ))){
+                fprintf(stderr, "Semantic error @ line %d - No DATA section - Argument '%s' not declared.\n", it->lineNumber, it->token.c_str());
+                error = 1;
+                err++;
+                i = 1;
+            }
+        }
+    }
+    if (i==1){
+        fprintf(stderr, "Semantic error - Expected 'DATA' section!\n");
+    }
+    return err;
+}
+
+/*int Compiler::defasLabel(){
+    int err = 0;
+    vector<Token>::iterator it, newit, aux, auxx;
+    int i = 0;
+    for (it = tokenTable.begin(); it != tokenTable.end(); it++){
+        if (it->genericType == OPERAND && it->specificInfo != -1 && it->flag != -1){
+            aux = it;
+            aux--;
+            if (aux->lineNumber == it->lineNumber){
+                if (!(aux->genericType == MNEMONIC && (aux->specificInfo == JMP ||\
+                                                aux->specificInfo == JMPN ||\
+                                                aux->specificInfo == JMPP ||\
+                                                aux->specificInfo == JMPZ))){
+                    for (newit=tokenTable.begin();newit != data_it; newit++){
+                        if ( (newit->token.substr(0, newit->token.find(":")) == it->token) && \
+                                            (newit->genericType == LABEL) && \
+                                            (newit->lineNumber != it->lineNumber) && \
+                                            (newit->tokenPosInLin != it->tokenPosInLin) ){
+                            for (auxx = it; auxx != tokenTable.begin(); auxx--){
+                                if (auxx->genericType == DIRECTIVE && auxx->specificInfo == MACRO){
+                                    i=1;
+                                    break;
+                                }
+                            }
+                            for (auxx = it; auxx != tokenTable.begin(); auxx++){
+                                if (auxx->genericType == DIRECTIVE && auxx->specificInfo == END){
+                                    i++;
+                                    break;
+                                }
+                            }
+                            if (i!=2){
+                                fprintf(stderr, "Semantic error @ line %d - Definition from line %d (%s) declared as TEXT label in line %d.\n", it->lineNumber, it->lineNumber, it->token.c_str(), newit->lineNumber);
+                                error = 1;
+                                err++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return err;
+}*/
+
+int Compiler::invalidLabel(){
+    int err = 0;
+    vector<Token>::iterator it, newit, aux;
+    for (it = tokenTable.begin(); it != tokenTable.end(); it++){
+        if (it->genericType == OPERAND && it->specificInfo != -1 && it->flag != -1){
+            aux = it;
+            aux--;
+            if (aux->genericType == MNEMONIC && (aux->specificInfo == JMP ||\
+                                            aux->specificInfo == JMPN ||\
+                                            aux->specificInfo == JMPP ||\
+                                            aux->specificInfo == JMPZ)){
+                for (newit=tokenTable.begin();newit != data_it; newit++){
+                    if ( (newit->token.substr(0, newit->token.find(":")) == it->token) && \
+                                        (newit->genericType == LABEL) && \
+                                        (newit->lineNumber != it->lineNumber) && \
+                                        (newit->tokenPosInLin != it->tokenPosInLin) ){
+                        break;
+                    }
+                }
+                if (newit != data_it){
+                    aux = newit;
+                    aux++;
+                    if (aux->genericType == DIRECTIVE){
+                        fprintf(stderr, "Semantic error @ line %d - Jump to invalid Label ('%s' - previous declaration @ line %d).\n", newit->lineNumber, it->token.c_str(), it->lineNumber);
+                        error = 1;
+                        err++;
+                    }
+                }
+            }
+        }
+    }
+    return err;
+}
+
+int Compiler::noLabel(){
+    int err = 0;
+    vector<Token>::iterator it, newit, aux;
+    for (it = tokenTable.begin(); it != tokenTable.end(); it++){
+        if (it->genericType == OPERAND && it->specificInfo != -1 && it->flag != -1){
+            aux = it;
+            aux--;
+            if (aux->genericType == MNEMONIC && (aux->specificInfo == JMP ||\
+                                            aux->specificInfo == JMPN ||\
+                                            aux->specificInfo == JMPP ||\
+                                            aux->specificInfo == JMPZ)){
+                for (newit=tokenTable.begin();newit != data_it; newit++){
+                    if ( (newit->token.substr(0, newit->token.find(":")) == it->token) && \
+                                        (newit->genericType == LABEL) && \
+                                        (newit->lineNumber != it->lineNumber) && \
+                                        (newit->tokenPosInLin != it->tokenPosInLin) ){
+                        break;
+                    }
+                }
+                if (newit == data_it){
+                    fprintf(stderr, "Semantic error @ line %d - Label '%s' not declared in TEXT section.\n", it->lineNumber, it->token.c_str());
+                    error = 1;
+                    err++;
+                    while (newit != tokenTable.end()){
+                        newit++;
+                        if ( (newit->token.substr(0, newit->token.find(":")) == it->token) && \
+                                            (newit->genericType == LABEL) && \
+                                            (newit->lineNumber != it->lineNumber) && \
+                                            (newit->tokenPosInLin != it->tokenPosInLin) ){
+                            fprintf(stderr, "Semantic error @ line %d - Label '%s' defined in DATA section, but a TEXT section label was expected (previous declaration @ line %d).\n", newit->lineNumber, it->token.c_str(), it->lineNumber);
+                            error = 1;
+                            err++;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return err;
+}
+
+int Compiler::labelExist(){
+    vector<Token>::iterator itt, itl;
+    int err = 0;
+    int flag = 0;
+
+    for (itt = tokenTable.begin(); itt != tokenTable.end(); itt++){
+        if (itt->genericType == OPERAND){
+            for (itl = labelTable.begin(); itl != labelTable.end(); itl++){
+                if (itt->token == itl->token){
+                    flag = 1;
+                    break;
+                }
+            }
+            if (!flag) {
+                cerr << "Semantic Error @ Line " << itt->lineNumber << " - no definition of label (" << itt->token << ") found." << endl;
+                error = 1;
+                err++;
+            }
+            flag = 0;
+        }
+    }
+
+    return err;
+}
+
+int Compiler::wrongSection(){
+    int err = 0;
+    vector<Token>::iterator it;
+    for (it = tokenTable.begin(); it != data_it; it++){
+        if (it->genericType == DIRECTIVE && (it->specificInfo == CON || it->specificInfo == SPACE)){
+            fprintf(stderr, "Semantic error @ line %d - Atempt to use the directive '%s' in the wrong section.\n", it->lineNumber, it->token.c_str());
+            error = 1;
+            err++;
+        }
+    }
+    while (it != tokenTable.end()){
+        if (it->genericType == MNEMONIC){
+            fprintf(stderr, "Semantic error @ line %d - Atempt to use the mnemonic '%s' in the wrong section.\n", it->lineNumber, it->token.c_str());
+            error = 1;
+            err++;
+        }
+        it++;
+    }
+    return err;
+}
+
 void Compiler::semanticErrorTreat(){
+    int err = 0;
+
+    err+=duplicateLabel();
+    err+=sectionPlacement();
+    if (err == 0 && hasdatasec) err+=checkSymbolsFromData();
+    else if (err == 0) err+=checkForDataNeed();
+    //err+=defasLabel();
+    err+=invalidLabel();
+    err+=noLabel();    
+    err+=labelExist();    
+    err+=wrongSection();
+
 }
+
+//////////////////////////////////////////////////
+////////////////////////////////////// SYNTHESIS
+//////////////////////////////////////////////////
+
 void Compiler::firstPass(){ //done
   std::vector<Token>::iterator it;
   Symbol symbol;
@@ -342,7 +1547,7 @@ void Compiler::firstPass(){ //done
 
         break;
 
-        case CONST:
+        case CON:
           posCounter++;
         break;
 
@@ -421,7 +1626,7 @@ void Compiler::secondPass(){ //done
                     object.insert(object.end(),0);
                 }
                 break;
-                case CONST:
+                case CON:
                   it_to++;
                   if (it_to->genericType == CONST)
                   {
@@ -462,6 +1667,7 @@ int main(int argc, char* argv[])
   com.scaner();
   com.parser();
   com.semanticErrorTreat();
+  if(error==1) return 0;
   com.firstPass();
   com.secondPass();
   return 0;

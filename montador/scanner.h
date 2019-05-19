@@ -16,10 +16,8 @@
 
 int scanner(char * file_name, std::list<Token> & tokenlist, std::list<Token> & labellist);
 int identify_tokens (char * s, std::list<Token> & tokenlist);
-
 void verify_tokens (std::list<Token> & tokenlist, std::list<Token> & labellist);
 int categorize_token(Token & token, std::list<Token> & labellist, std::list<Token> & tokenlist);
-
 int is_mnemonic(Token & token);
 int is_label(Token & token, std::list<Token> & labellist);
 int is_directive(Token & token);

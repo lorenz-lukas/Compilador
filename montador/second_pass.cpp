@@ -70,4 +70,5 @@ void second_pass(list<Token> & tokenlist, list<Symbol> & symboltable, list<int> 
 			break;
 		}
 	}
+}
 

@@ -14,7 +14,7 @@
 using namespace std;
 
 int pre_error = 0; // flag to indicate if pre-processor had any error.
-int solo = 0;
+
 
 /*
 * MAIN: validates arguments and calls specifc functions, acording to arguments.
@@ -22,13 +22,12 @@ int solo = 0;
 *         - argv -> argument vector from terminal
 * OUTPUT: none
 */
+
 int main (int argc, char** argv){
 
     list<Token> tokenlist;
     list<Token>::iterator it, aux;
-    list<Symbol> dt, ut;
-    list<Symbol>::iterator its;
-    list<int> object, realoc;
+    list<int> object;
     list<int>::iterator it_ob;
 
     validate_arguments(argc, argv);
@@ -38,7 +37,6 @@ int main (int argc, char** argv){
 
 
     
-    solo = 1;
     file_name = file_name = string(argv[1]);
     pre_processor(strdup(file_name.c_str()), tokenlist);
     
@@ -77,6 +75,8 @@ int main (int argc, char** argv){
     object_fn = object_fn + ".obj";
     ofstream fpo1 (object_fn);  //opens output file
     
+    
+
     for (it_ob = object.begin(); it_ob != object.end(); it_ob++){
         fpo1 << *it_ob << " ";
     }
