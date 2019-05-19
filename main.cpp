@@ -63,7 +63,7 @@ class Compiler
     void secondPass();
 
     std::vector<string> codeRaw, code, temp;
-    std::vector<string> originalCodeLine;
+    std::vector<int> originalCodeLine;
     std::vector<vector<string> > macrotable, equIfTable;
     string instructions[14] =
     {"ADD","SUB","MULT","DIV","JUMP","JUMPN","JUMPP","JUMPZ","COPY","LOAD","STORE","INPUT","OUTPUT","STOP"};
@@ -145,9 +145,9 @@ void Compiler::getMacro(string line,int *i){
 
 void Compiler::expMacro(string line, int *i, int j){
   int index = *i;
-  string macroName;
+  string macroName,args,arg1,arg2,arg3;
   std::size_t found = line.find(" ");
-  std::size_t found2,error;
+  std::size_t found1,found2,error;
 
   for(int k = 0; k < (int)this->macrotable.size(); k++)cout<< this->macrotable[k][0] << endl; //[collum][row]
   if(found!= std::string::npos)macroName.append(line, 0,found);
@@ -157,15 +157,22 @@ void Compiler::expMacro(string line, int *i, int j){
       this->temp.push_back(this->macrotable[j][k]);
     }
   }else{
-    found = line.find(",");
-    found2 = line.find(",", found+1);
+    found1 = line.find(",");
+    found2 = line.find(",", found1+1);
     error = line.find(",", found2+1);
-    if(error!=std::string::npos){
-      cout<< "[ERROR] Macro with more than 3 arguments at line %d" << index << endl;
-      // QUIT
+    int j = found+1;
+    for(;j<line.length();j++){
+      if(line[j]>32)break;
     }
-    if(found2 == std::string::npos){// two arguments
-      
+    args.append(line, j, line.length());
+    if(error!=std::string::npos){
+        cout<< "[ERROR] Macro with more than 3 arguments at line %d" << index << endl;
+      // QUIT
+    }else if(found1 == std::string::npos && found2 == std::string::npos){//one argument
+        arg1 = args;
+
+    }else if(found1 != std::string::npos && found2 == std::string::npos){// two arguments
+
     }else{//thre arguments
 
     }
@@ -219,6 +226,7 @@ void Compiler::preprocessing()
   string line;
   int control = 1;
   int j = 0;
+  std::vector<int> lineIndex;
   for(int i = 0; i < this->codeRaw.size() ; i++){
     line = this->codeRaw[i];
     control = 1;
@@ -239,7 +247,7 @@ void Compiler::preprocessing()
         else macroName = line;
         for(int j = 0; j < (int)this->macrotable.size(); j++){
           if(macroName.find(this->macrotable[j][0])!= std::string::npos){
-            this->expMacro(line, &i, j);
+            //this->expMacro(line, &i, j);
             control = 0;
             break;
           }
@@ -282,8 +290,9 @@ void Compiler::preprocessing()
           instruction.append(line, j, size);
           line = instruction;
       }
-      if(!line.empty() && control){// Qualquer linha ou EQU 1
+      if(!line.empty() && control){
           this->temp.push_back(line);
+          lineIndex.push_back(i+1);
       }
 
     }
@@ -295,9 +304,15 @@ void Compiler::preprocessing()
     }
   }
 
-  for(int i = control; i < this->temp.size(); i++) this->code.push_back(this->temp[i]);
+  for(int i = control; i < this->temp.size(); i++) {
+    this->code.push_back(this->temp[i]);
+    this->originalCodeLine.push_back(lineIndex[i]);
+  }
   cout<<"\n\n      CODE CORRECTED:"<< endl;
-  for(int i = 0; i < this->code.size() ; i++) cout<<this->code[i]<<endl;
+  for(int i = 0; i < this->code.size() ; i++) {
+    cout<<this->code[i]<<endl;
+    cout<<this->originalCodeLine[i]<<endl;
+  }
 }
 
 //////////////////////////////////////////////////
