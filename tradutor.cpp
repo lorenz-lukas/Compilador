@@ -181,7 +181,6 @@ string Compiler::swap(string line, string argLine, string argTable){
     }
     temp1 += " " + argLine;
     line = temp1 + temp2;
-    cout<< line << endl;
   }
   return line;
 }
@@ -197,7 +196,8 @@ void Compiler::expMacro(string line, int *i, int j){
 
   found1 = line.find(","); // two arguments
   found2 = line.find(",", found1+1);//three arguments
-  error = line.find(",", found2+1);// + three arguments
+  if(found2!= std::string::npos)error = line.find(",", found2+1);// + three arguments
+  else error = std::string::npos;
   //for(;k<line.length();j++){
   //  if(line[k]>32)break;
   //}
@@ -233,10 +233,13 @@ void Compiler::expMacro(string line, int *i, int j){
               int arg1Index = argsTable.find("&"); // one
               int found1Index = argsTable.find(",");
               arg1Table.append(argsTable, arg1Index+1,found1Index-1);
-              arg2Table.append(argsTable, found1Index+1,argsTable.length());
+              arg2Table.append(argsTable, found1Index+2,argsTable.length());
               for(int m = 0; m < (found1-found-1); m++)         arg1.push_back(line[m+found+1]);
               for(int m = 0; m < (line.length()-found1+1); m++) arg2.push_back(line[m+found1+1]);
-
+              cout<<arg1<<endl;
+              cout<<arg2<<endl;
+              cout<<arg1Table<<endl;
+              cout<<arg2Table<<endl;
               for(int k = 2; k < (int)this->macrotable[j].size(); k++){
                 line = this->macrotable[j][k];
                 line = this->swap(line, arg1, arg1Table);

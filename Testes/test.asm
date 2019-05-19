@@ -11,7 +11,7 @@ MULT N
 STORE N
 END
 
-TROCA: MACRO &A,&B,&TEMP
+TROCA: MACRO &A
   COPY A, TEMP
   COPY B, A
   COPY TEMP, B
@@ -22,7 +22,7 @@ ROT:
 
 INPUT N1
 copy N1, N4 ; comentario qualquer
-Troca N1,N2,N3
+Troca N1
 COPY N2,N3
 COPY N3, N3 + 1
 output N3 + 1
