@@ -137,18 +137,17 @@ void Compiler::getCode(string name)
 void Compiler::getMacro(string line,int *i){
   std::size_t found = line.find(":");
   std::vector<string> temp1;
-  string name;
+  string name,args;
   int index = *i+1;
   int j = 0;
   if(found != string::npos){
     name.append(line, 0, found);
     found = line.find("&");
     if(found!=string::npos){//Arguments not equal to zero
-        name+=" ";
-        name.append(line, found, line.length());
-        //cout<< name << endl;
+        args.append(line, found, line.length());
     }
     temp1.push_back(name);
+    temp1.push_back(args);
     for(; index <= this->codeRaw.size(); index++){
         line = this->codeRaw[index];
         if(line[0]==32){
@@ -161,51 +160,72 @@ void Compiler::getMacro(string line,int *i){
             line = instruction;
         }
         if(line.find("END", 0) != std::string::npos)break;
-        //cout<< line << endl;
         temp1.push_back(line);
     }
     this->macrotable.push_back(temp1);
     *i = index;
-    //cout<< j << endl;
   }else cout<< "Macro definition error! Miss ':' marker at line %d." << index-1 << endl;
 }
 
 void Compiler::expMacro(string line, int *i, int j){
-  int index = *i;
-  string macroName,args,arg1,arg2,arg3;
+  int index = *i+1;
+  string macroName,arg1,arg2,arg3;
+  string macroNameTable = this->macrotable[j][0], argsTable = this->macrotable[j][1], arg1Table, arg2Table ,arg3Table;
+
   std::size_t found = line.find(" ");
+  int k = found+1;
   std::size_t found1,found2,error;
 
-  for(int k = 0; k < (int)this->macrotable.size(); k++)cout<< this->macrotable[k][0] << endl; //[collum][row]
+  found1 = line.find(","); // two arguments
+  found2 = line.find(",", found1+1);//three arguments
+  error = line.find(",", found2+1);// + three arguments
+  //for(;k<line.length();j++){
+  //  if(line[k]>32)break;
+  //}
+  //args.append(line, k, line.length());
+
+  //for(int k = 0; k < (int)this->macrotable.size(); k++)cout<< this->macrotable[k][0] << endl; //[collum][row]
   if(found!= std::string::npos)macroName.append(line, 0,found);
   else macroName = line;
-  if(macroName.length() == line.length()){ // None arguments
-    for(int k = 2; k < (int)this->macrotable[j].size(); k++){
-      this->temp.push_back(this->macrotable[j][k]);
-    }
-  }else{
-    found1 = line.find(",");
-    found2 = line.find(",", found1+1);
-    error = line.find(",", found2+1);
-    int j = found+1;
-    for(;j<line.length();j++){
-      if(line[j]>32)break;
-    }
-    args.append(line, j, line.length());
-    if(error!=std::string::npos){
-        cout<< "[ERROR] Macro with more than 3 arguments at line %d" << index << endl;
-      // QUIT
-    }else if(found1 == std::string::npos && found2 == std::string::npos){//one argument
-        arg1 = args;
 
-    }else if(found1 != std::string::npos && found2 == std::string::npos){// two arguments
+  if(argsTable.length() == 0){ // None arguments
+      if(macroName.length() == line.length()){
+        for(int k = 2; k < (int)this->macrotable[j].size(); k++){
+          this->temp.push_back(this->macrotable[j][k]);
+        }
+      }else cout<< "[ERROR] Macro with number of parameters greater than necessary at line: " << index << endl;
+  }else{ // At least one argument
+      if(macroName.length() != line.length()){
+          if(error!=std::string::npos){
+              cout<< "[ERROR] Macro with more than 3 arguments at line: " << index << endl;
+            // QUIT
+          }else if(found1 == std::string::npos && found2 == std::string::npos){//one argument
+              int arg1Index = argsTable.find("&"); // one
+              arg1Table.append(argsTable, arg1Index+1,argsTable.length());
+              arg1.append(line,found+1,line.length());
 
-    }else{//thre arguments
+          }else if(found1 != std::string::npos && found2 == std::string::npos){// two arguments
+              int arg1Index = argsTable.find("&"); // one
+              int found1Index = argsTable.find(",");
+              arg1Table.append(argsTable, arg1Index+1,found1Index-1);
+              arg2Table.append(argsTable, found1Index+1,argsTable.length());
+              for(int m = 0; m < (found1-found-1); m++)         arg1.push_back(line[m+found+1]);
+              for(int m = 0; m < (line.length()-found1+1); m++) arg2.push_back(line[m+found1+1]);
 
-    }
+          }else if(found1 != std::string::npos && found2 != std::string::npos){//thre arguments
+              int arg1Index = argsTable.find("&");
+              int found1Index = argsTable.find(",");
+              int found2Index = argsTable.find(",",found1Index+1);
+              arg1Table.append(argsTable, arg1Index+1,found1Index-1);
+              for(int m = 0; m < (found2Index-found1Index-2); m++) arg2Table.push_back(argsTable[m+found1Index+2]);
+              arg3Table.append(argsTable, found2Index+2,argsTable.length());
+              for(int m = 0; m < (found1-found-1); m++)         arg1.push_back(line[m+found+1]);
+              for(int m = 0; m < (found2-found1-1); m++)        arg2.push_back(line[m+found1+1]);
+              for(int m = 0; m < (line.length()-found2+1); m++) arg3.push_back(line[m+found2+1]);
+              
+          }else cout<< "[ERROR] Macro with wrong number of parameters at line: " << index << endl;
+      }else cout<< "[ERROR] Macro with number of parameters less than necessary at line: " << index << endl;
   }
-  //i=j;
-  cout << this->codeRaw[j] << endl;
 }
 string Compiler::brokenLabel(string line, int *i){
   std::size_t found = line.find(":");
@@ -276,8 +296,8 @@ void Compiler::preprocessing()
         if(found!= std::string::npos)macroName.append(line, 0,found);
         else macroName = line;
         for(int j = 0; j < (int)this->macrotable.size(); j++){
-          if(macroName.find(this->macrotable[j][0])!= std::string::npos){
-            //this->expMacro(line, &i, j);
+          if(macroName.compare(this->macrotable[j][0]) == 0){
+            this->expMacro(line, &i, j);
             control = 0;
             break;
           }
@@ -340,7 +360,7 @@ void Compiler::preprocessing()
   cout<<"\n\n      CODE CORRECTED:"<< endl;
   for(int i = 0; i < this->code.size() ; i++) {
     cout<<this->code[i]<<endl;
-    cout<<this->originalCodeLine[i]<<endl;
+    //cout<<this->originalCodeLine[i]<<endl;
   }
 }
 

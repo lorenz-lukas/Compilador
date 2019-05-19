@@ -22,7 +22,7 @@ ROT:
 
 INPUT N1
 copy N1, N4 ; comentario qualquer
-TROCA N1,N2,N3
+Troca N1,N2,N3
 COPY N2,N3
 COPY N3, N3 + 1
 output N3 + 1
