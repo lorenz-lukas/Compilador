@@ -19,7 +19,7 @@ int pre_processor(char * input_fn, list<Token> & tokenlist){
     list<Token>::iterator it, aux;
 
     scanner(input_fn, tokenlist, labellist);
-    parser(tokenlist, labellist);
+    parser(tokenlist);
     semantic_analyser(tokenlist, labellist);
     //solve_macro(tokenlist);
 

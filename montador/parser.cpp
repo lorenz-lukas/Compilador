@@ -1,6 +1,6 @@
 #include "parser.h"
 
-int parser (list <Token> & tokenlist, list <Token> & labellist){
+void parser (list <Token> & tokenlist){
 	list<Token>::iterator it;
 
 	it = tokenlist.begin();
@@ -41,8 +41,6 @@ int parser (list <Token> & tokenlist, list <Token> & labellist){
 			break;
 		}
 	}
-
-	return 0;
 }
 
 list<Token>::iterator parser_mnemonic(list <Token> & tokenlist, list<Token>::iterator it){
@@ -68,8 +66,8 @@ list<Token>::iterator parser_mnemonic(list <Token> & tokenlist, list<Token>::ite
 					it++;
 					if (it == tokenlist.end() || target_line != it->line_number){
 						mark_sintax_error(tokenlist,it);
-										pre_error = 1;
-										it->flag = -1;
+						pre_error = 1;
+						it->flag = -1;
 						cerr << "Sintax Error @ Line " << target_line << " - missing argument." << endl;
 					}
 				}
@@ -641,84 +639,6 @@ list<Token>::iterator parser_directive(list <Token> & tokenlist, list<Token>::it
 			} while(it != tokenlist.end() && target_line == it->line_number);
 		break;
 
-		/*case DIR_BEGIN:	
-		case DIR_EXTERN:
-			it--;
-			if (it->type == TT_LABEL) {		// check if have label.
-				it++;
-				it++;
-
-				if (it != tokenlist.end() && target_line == it->line_number){		// check if argument exist.
-					cerr << "Sintax Error @ Line " << target_line << " - unexpected argument." << endl;
-					mark_sintax_error(tokenlist,it);
-					pre_error = 1;
-					it->flag = -1;
-					do {		// get out of line.
-						it++;
-					} while(it != tokenlist.end() && target_line == it->line_number);
-				}
-			} else {
-				it++;
-
-				cerr << "Sintax Error @ Line " << target_line << " - invalid use of directive." << endl;
-				mark_sintax_error(tokenlist,it);
-				pre_error = 1;
-				it->flag = -1;
-				do {		// get out of line.
-					it++;
-				} while(it != tokenlist.end() && target_line == it->line_number);
-			}
-		break;
-
-		case DIR_END:	
-			it++;
-
-			if (it != tokenlist.end() && target_line == it->line_number){		// check if argument exist.
-				cerr << "Sintax Error @ Line " << target_line << " - unexpected argument." << endl;
-				mark_sintax_error(tokenlist,it);
-				pre_error = 1;
-				it->flag = -1;
-				do {		// get out of line.
-					it++;
-				} while(it != tokenlist.end() && target_line == it->line_number);
-			}
-		break;
-
-		case DIR_PUBLIC:
-			it++;
-
-			if (it != tokenlist.end() && target_line == it->line_number){	// check if argument is present.
-				if (it->type == TT_OPERAND){								// check if argument is valid.
-					it++;
-
-					if (it != tokenlist.end() && target_line == it->line_number){		// check if argument exist.
-						cerr << "Sintax Error @ Line " << target_line << " - unexpected argument." << endl;
-						mark_sintax_error(tokenlist,it);
-						pre_error = 1;
-						it->flag = -1;
-						do {		// get out of line.
-							it++;
-						} while(it != tokenlist.end() && target_line == it->line_number);
-					}
-				} else {
-					mark_sintax_error(tokenlist,it);
-								pre_error = 1;
-								it->flag = -1;
-					cerr << "Sintax Error @ Line " << target_line << " - invalid argument." << endl;
-					do {		// get out of line.
-						it++;
-					} while(it != tokenlist.end() && target_line == it->line_number);
-					break;
-				}
-			} else {
-				mark_sintax_error(tokenlist,it);
-								pre_error = 1;
-								it->flag = -1;
-				cerr << "Sintax Error @ Line " << target_line << " - missing argument." << endl;
-				break;
-			}
-		break;*/
-
 		default:
 			cerr << "Parser: unknowm directive token (" << it->str << ")." << endl;
 			mark_sintax_error(tokenlist,it);
@@ -884,8 +804,8 @@ list<Token>::iterator parser_ampersand(list <Token> & tokenlist, list<Token>::it
 	it++;
 	if (it == tokenlist.end() || target_line != it->line_number){
 		mark_sintax_error(tokenlist,it);
-										pre_error = 1;
-										it->flag = -1;
+		pre_error = 1;
+		it->flag = -1;
 		cerr << "Sintax Error @ Line " << target_line << " - ." << endl;
 	}
 
@@ -899,14 +819,14 @@ list<Token>::iterator parser_label(list <Token> & tokenlist, list<Token>::iterat
 	it++;
 	if (it == tokenlist.end() || target_line != it->line_number){
 		mark_sintax_error(tokenlist,it);
-										pre_error = 1;
-										it->flag = -1;
+		pre_error = 1;
+		it->flag = -1;
 		cerr << "Sintax Error @ Line " << target_line << " - empty label." << endl;
 	} else {
 		if (it->type == TT_LABEL){
 			mark_sintax_error(tokenlist,it);
-										pre_error = 1;
-										it->flag = -1;
+			pre_error = 1;
+			it->flag = -1;
 			cerr << "Sintax Error @ Line " << target_line << " - multiple labels in line." << endl;
 			do {		// get out of line.
 				it++;

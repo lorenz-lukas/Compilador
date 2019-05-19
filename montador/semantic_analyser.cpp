@@ -41,14 +41,13 @@ especificações de roteiro
 */
 
 
-int semantic_analyser(list <Token> & tokenlist, list <Token> & labellist){
-    list <Token> datalist, textlist;
-    list<Token>::iterator text_it, data_it;
+void semantic_analyser(list <Token> & tokenlist, list <Token> & labellist){
+    list<Token>::iterator  data_it;
     int err = 0;
     int hasdatasec = 0;
 
     err+=duplicate_label(labellist);
-    err+=section_placement(tokenlist, text_it, data_it, hasdatasec);
+    err+=section_placement(tokenlist, data_it, hasdatasec);
     
     if (err == 0 && hasdatasec){
         err+=check_symbols_from_data(tokenlist, data_it);
@@ -60,13 +59,12 @@ int semantic_analyser(list <Token> & tokenlist, list <Token> & labellist){
     
     err+=nolabel(tokenlist, data_it);
 
-    //err+=begendexist(tokenlist);
+    
     err+=labelexist(tokenlist, labellist);
 
-    //err+=const_cases(tokenlist, data_it);
+    
     err+=wrong_section(tokenlist, data_it);
 
-    return err;
 }
 
 
@@ -117,7 +115,7 @@ int duplicate_label (list <Token> & labellist){
 }
 
 
-int section_placement (list <Token> & tokenlist, list<Token>::iterator & text, list<Token>::iterator & data, int & hasdatasec){
+int section_placement (list <Token> & tokenlist, list<Token>::iterator & data_it, int & hasdatasec){
     list<Token>::iterator it = tokenlist.begin();
     int err = 0;
     int count = 0;
@@ -130,8 +128,6 @@ int section_placement (list <Token> & tokenlist, list<Token>::iterator & text, l
                     fprintf(stderr, "Semantic error @ line %d - Expected 'TEXT' section!\n", it->line_number);
                     pre_error = 1;
                     err++;
-                }else{
-                    text = it;
                 }
             }else if (count == 1 && err == 0){      //second section
                 if (!(it->type == TT_DIRECTIVE && it->addit_info == DIR_DATA)){     //not data section
@@ -139,7 +135,7 @@ int section_placement (list <Token> & tokenlist, list<Token>::iterator & text, l
                     pre_error = 1;
                     err++;
                 }else{
-                    data = it;
+                    data_it = it;
                 }
             }else if (err == 0){    //third+ section
                 fprintf(stderr, "Semantic error @ line %d - Too many sections!\n", it->line_number);
@@ -384,46 +380,6 @@ int invalid_label(list<Token> & tokenlist, list<Token>::iterator data_it){
 }
 
 
-int const_cases(list<Token> & tokenlist, list<Token>::iterator data_it){
-    int err = 0;
-    list<Token>::iterator it, otherit, aux;
-    for (it = tokenlist.begin(); it != tokenlist.end(); it++){
-        if ( it->type == TT_MNEMONIC ){
-            if (it->addit_info == OP_STORE || it->addit_info == OP_COPY){
-                it++;
-                for (otherit = data_it; otherit != tokenlist.end(); otherit++){
-                    if (otherit->str.substr(0, otherit->str.find(":")) == it->str){
-                        aux = otherit;
-                        advance (aux, 2);
-                        if (aux->line_number == otherit->line_number && aux->type == TT_CONST){
-                            fprintf(stderr, "Semantic error @ line %d - Atempt to change constant value ('%s').\n", it->line_number, it->str.c_str());
-                            pre_error = 1;
-                            err++;
-                        }
-                    }
-                }
-            }
-            if (it->addit_info == OP_DIV){
-                it++;
-                for (otherit = data_it; otherit != tokenlist.end(); otherit++){
-                    if (otherit->str.substr(0, otherit->str.find(":")) == it->str){
-                        aux = otherit;
-                        advance (aux, 2);
-                        if (aux->line_number == otherit->line_number && aux->type == TT_CONST){
-                            if (aux->addit_info == 0){
-                                fprintf(stderr, "Semantic error @ line %d - Atempt to divide by zero.\n", it->line_number);
-                                pre_error = 1;
-                                err++;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return err;
-}
-
 
 int wrong_section(list<Token> & tokenlist, list<Token>::iterator data_it){
     int err = 0;
@@ -445,47 +401,4 @@ int wrong_section(list<Token> & tokenlist, list<Token>::iterator data_it){
     }
     return err;
 }
-/*int begendexist(list <Token> & tokenlist){
-    list<Token>::iterator it;
-    int err = 0;
-    int fbegin = 0;
-    int fend = 0;
 
-    for (it = tokenlist.begin(); it != tokenlist.end(); it++){
-        if (it->type == TT_DIRECTIVE && it->addit_info == DIR_BEGIN){
-            fbegin = 1;
-            if (solo){
-                cerr << "Semantic Error @ Line " << it->line_number << " - the archive can't have BEGIN directive." << endl;
-                pre_error = 1;
-                err++;
-            }
-        }
-        if (it->type == TT_DIRECTIVE && it->addit_info == DIR_END){
-            fend = 1;
-            if (solo){
-                cerr << "Semantic Error @ Line " << it->line_number << " - the archive can't have END directive." << endl;
-                pre_error = 1;
-                err++;
-            }
-            if (!fbegin){
-                cerr << "Semantic Error @ Line " << it->line_number << " - END directive before BEGIN." << endl;
-                pre_error = 1;
-                err++;
-            }
-        }
-    }
-    if (!solo){
-        if (!fbegin){
-            cerr << "Semantic Error - missing BEGIN directive." << endl;
-            pre_error = 1;
-            err++;
-        }
-        if (!fend){
-            cerr << "Semantic Error - missing END directive." << endl;
-            pre_error = 1;
-            err++;
-        }
-    }
-
-    return err;
-}*/

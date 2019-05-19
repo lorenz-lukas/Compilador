@@ -20,10 +20,10 @@ using namespace std;
 
 int scanner (char * s, list<Token> & tokenlist, list<Token> & labellist){
     identify_tokens(s, tokenlist);      //generates token list
-    //print_list (tokenlist);
     verify_tokens(tokenlist, labellist);       //verifies token lexic validity
     ifequ(tokenlist, labellist);
     solve_macro(tokenlist);
+
 #ifdef __DEBUG__
     print_list (tokenlist);
     print_list (labellist);
@@ -395,28 +395,7 @@ int is_directive(Token & token){
         token.type = TT_DIRECTIVE;
         token.addit_info = DIR_DATA;
         return DIR_DATA;
-    }/*else
-    if (token.str.compare("ENDMACRO") == 0){
-        token.type = TT_DIRECTIVE;
-        token.addit_info = DIR_ENDMACRO;
-        return DIR_ENDMACRO;
-    if (token.str.compare("BEGIN") == 0){
-        token.type = TT_DIRECTIVE;
-        token.addit_info = DIR_BEGIN;
-        return DIR_BEGIN;
-    }else
-    }else
-    if (token.str.compare("EXTERN") == 0){
-        token.type = TT_DIRECTIVE;
-        token.addit_info = DIR_EXTERN;
-        return DIR_EXTERN;
-    }else
-    if (token.str.compare("PUBLIC") == 0){
-        token.type = TT_DIRECTIVE;
-        token.addit_info = DIR_PUBLIC;
-        return DIR_PUBLIC;
-    }*/
-
+    }
     token.type = 0;
     token.addit_info = 0;
     return 0;
