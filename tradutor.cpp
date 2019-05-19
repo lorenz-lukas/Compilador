@@ -176,9 +176,7 @@ string Compiler::swap(string line, string argLine, string argTable){
     temp1.append(line,0,found-1);
     temp2.append(line,found + argTable.length(),line.length());
     found = temp2.find(" ");
-    if(found!=std::string::npos){
-      temp2.erase(remove(temp2.begin(), temp2.end(), ' '), temp2.end());
-    }
+    found = temp1.find(" ");
     temp1 += " " + argLine;
     line = temp1 + temp2;
   }
@@ -198,19 +196,29 @@ void Compiler::expMacro(string line, int *i, int j){
   found2 = line.find(",", found1+1);//three arguments
   if(found2!= std::string::npos)error = line.find(",", found2+1);// + three arguments
   else error = std::string::npos;
-  //for(;k<line.length();j++){
-  //  if(line[k]>32)break;
-  //}
-  //args.append(line, k, line.length());
-
-  //for(int k = 0; k < (int)this->macrotable.size(); k++)cout<< this->macrotable[k][0] << endl; //[collum][row]
   if(found!= std::string::npos)macroName.append(line, 0,found);
   else macroName = line;
 
   if(argsTable.length() == 0){ // None arguments
       if(macroName.length() == line.length()){
+        int control = 1;
+        std::size_t space;
         for(int k = 2; k < (int)this->macrotable[j].size(); k++){
-          this->temp.push_back(this->macrotable[j][k]);
+          control = 1;
+          string macro;
+          space = line.find(" ");
+          line = this->macrotable[j][k];
+          if(space!= std::string::npos)macro.append(line, 0,space+1);
+          else macro = line;
+          for(int j = 0; j < (int)this->macrotable.size(); j++){
+              if(macro.compare(this->macrotable[j][0]) == 0){
+                  expMacro(line, i, j);
+                  control = 0;
+              }
+          }
+          if(control){
+            this->temp.push_back(line);
+          }
         }
       }else cout<< "[ERROR] Macro with number of parameters greater than necessary at line: " << index << endl;
   }else{ // At least one argument
@@ -223,10 +231,25 @@ void Compiler::expMacro(string line, int *i, int j){
               arg1Table.append(argsTable, arg1Index+1,argsTable.length());
               arg1.append(line,found+1,line.length());
 
+              int control = 1;
+              std::size_t space;
               for(int k = 2; k < (int)this->macrotable[j].size(); k++){
-                line = this->macrotable[j][k];
-                line = this->swap(line, arg1, arg1Table);
-                this->temp.push_back(line);
+                    control = 1;
+                    string macro;
+                    space = line.find(" ");
+                    line = this->macrotable[j][k];
+                    if(space!= std::string::npos)macro.append(line, 0,space+1);
+                    else macro = line;
+                    for(int j = 0; j < (int)this->macrotable.size(); j++){
+                        if(macro.compare(this->macrotable[j][0]) == 0){
+                            expMacro(line, i, j);
+                            control = 0;
+                        }
+                    }
+                    if(control){
+                      line = this->swap(line, arg1, arg1Table);
+                      this->temp.push_back(line);
+                    }
               }
 
           }else if(found1 != std::string::npos && found2 == std::string::npos){// two arguments
@@ -236,15 +259,26 @@ void Compiler::expMacro(string line, int *i, int j){
               arg2Table.append(argsTable, found1Index+2,argsTable.length());
               for(int m = 0; m < (found1-found-1); m++)         arg1.push_back(line[m+found+1]);
               for(int m = 0; m < (line.length()-found1+1); m++) arg2.push_back(line[m+found1+1]);
-              cout<<arg1<<endl;
-              cout<<arg2<<endl;
-              cout<<arg1Table<<endl;
-              cout<<arg2Table<<endl;
+              int control = 1;
+              std::size_t space;
               for(int k = 2; k < (int)this->macrotable[j].size(); k++){
-                line = this->macrotable[j][k];
-                line = this->swap(line, arg1, arg1Table);
-                line = this->swap(line, arg2, arg2Table);
-                this->temp.push_back(line);
+                    control = 1;
+                    string macro;
+                    space = line.find(" ");
+                    line = this->macrotable[j][k];
+                    if(space!= std::string::npos)macro.append(line, 0,space+1);
+                    else macro = line;
+                    for(int j = 0; j < (int)this->macrotable.size(); j++){
+                        if(macro.compare(this->macrotable[j][0]) == 0){
+                            expMacro(line, i, j);
+                            control = 0;
+                        }
+                    }
+                    if(control){
+                        line = this->swap(line, arg1, arg1Table);
+                        line = this->swap(line, arg2, arg2Table);
+                        this->temp.push_back(line);
+                    }
               }
 
           }else if(found1 != std::string::npos && found2 != std::string::npos){//thre arguments
@@ -258,12 +292,27 @@ void Compiler::expMacro(string line, int *i, int j){
               for(int m = 0; m < (found2-found1-1); m++)        arg2.push_back(line[m+found1+1]);
               for(int m = 0; m < (line.length()-found2+1); m++) arg3.push_back(line[m+found2+1]);
 
+              int control = 1;
+              std::size_t space;
               for(int k = 2; k < (int)this->macrotable[j].size(); k++){
-                line = this->macrotable[j][k];
-                line = this->swap(line, arg1, arg1Table);
-                line = this->swap(line, arg2, arg2Table);
-                line = this->swap(line, arg3, arg3Table);
-                this->temp.push_back(line);
+                    control = 1;
+                    string macro;
+                    space = line.find(" ");
+                    line = this->macrotable[j][k];
+                    if(space!= std::string::npos)macro.append(line, 0,space+1);
+                    else macro = line;
+                    for(int j = 0; j < (int)this->macrotable.size(); j++){
+                        if(macro.compare(this->macrotable[j][0]) == 0){
+                            expMacro(line, i, j);
+                            control = 0;
+                        }
+                    }
+                    if(control){
+                      line = this->swap(line, arg1, arg1Table);
+                      line = this->swap(line, arg2, arg2Table);
+                      line = this->swap(line, arg3, arg3Table);
+                      this->temp.push_back(line);
+                    }
               }
 
           }else cout<< "[ERROR] Macro with wrong number of parameters at line: " << index << endl;
