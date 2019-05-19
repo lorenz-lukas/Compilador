@@ -10,6 +10,7 @@
 #include <cstdio>
 #include <cctype>
 #include <cstdlib>
+#include <algorithm>
 
 // GENERIC TYPE OF TOKEN: -> used in genericType
 #define MNEMONIC    1
@@ -71,6 +72,7 @@ class Compiler
     void getCode(string name);
     void preprocessing();
       void getMacro(string line,int *i);
+      string swap(string line, string argLine, string argTable);
       void expMacro(string line, int *i, int j);
       void equIf(string line);
       string brokenLabel(string line, int *i);
@@ -167,6 +169,23 @@ void Compiler::getMacro(string line,int *i){
   }else cout<< "Macro definition error! Miss ':' marker at line %d." << index-1 << endl;
 }
 
+string Compiler::swap(string line, string argLine, string argTable){
+  std::size_t found = line.find(argTable);
+  if(found!=std::string::npos){
+    string temp1,temp2;
+    temp1.append(line,0,found-1);
+    temp2.append(line,found + argTable.length(),line.length());
+    found = temp2.find(" ");
+    if(found!=std::string::npos){
+      temp2.erase(remove(temp2.begin(), temp2.end(), ' '), temp2.end());
+    }
+    temp1 += " " + argLine;
+    line = temp1 + temp2;
+    cout<< line << endl;
+  }
+  return line;
+}
+
 void Compiler::expMacro(string line, int *i, int j){
   int index = *i+1;
   string macroName,arg1,arg2,arg3;
@@ -204,6 +223,12 @@ void Compiler::expMacro(string line, int *i, int j){
               arg1Table.append(argsTable, arg1Index+1,argsTable.length());
               arg1.append(line,found+1,line.length());
 
+              for(int k = 2; k < (int)this->macrotable[j].size(); k++){
+                line = this->macrotable[j][k];
+                line = this->swap(line, arg1, arg1Table);
+                this->temp.push_back(line);
+              }
+
           }else if(found1 != std::string::npos && found2 == std::string::npos){// two arguments
               int arg1Index = argsTable.find("&"); // one
               int found1Index = argsTable.find(",");
@@ -211,6 +236,13 @@ void Compiler::expMacro(string line, int *i, int j){
               arg2Table.append(argsTable, found1Index+1,argsTable.length());
               for(int m = 0; m < (found1-found-1); m++)         arg1.push_back(line[m+found+1]);
               for(int m = 0; m < (line.length()-found1+1); m++) arg2.push_back(line[m+found1+1]);
+
+              for(int k = 2; k < (int)this->macrotable[j].size(); k++){
+                line = this->macrotable[j][k];
+                line = this->swap(line, arg1, arg1Table);
+                line = this->swap(line, arg2, arg2Table);
+                this->temp.push_back(line);
+              }
 
           }else if(found1 != std::string::npos && found2 != std::string::npos){//thre arguments
               int arg1Index = argsTable.find("&");
@@ -222,7 +254,15 @@ void Compiler::expMacro(string line, int *i, int j){
               for(int m = 0; m < (found1-found-1); m++)         arg1.push_back(line[m+found+1]);
               for(int m = 0; m < (found2-found1-1); m++)        arg2.push_back(line[m+found1+1]);
               for(int m = 0; m < (line.length()-found2+1); m++) arg3.push_back(line[m+found2+1]);
-              
+
+              for(int k = 2; k < (int)this->macrotable[j].size(); k++){
+                line = this->macrotable[j][k];
+                line = this->swap(line, arg1, arg1Table);
+                line = this->swap(line, arg2, arg2Table);
+                line = this->swap(line, arg3, arg3Table);
+                this->temp.push_back(line);
+              }
+
           }else cout<< "[ERROR] Macro with wrong number of parameters at line: " << index << endl;
       }else cout<< "[ERROR] Macro with number of parameters less than necessary at line: " << index << endl;
   }
