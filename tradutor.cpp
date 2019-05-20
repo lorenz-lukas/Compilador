@@ -402,22 +402,26 @@ void Compiler::preprocessing()
         this->equIf(line);
       }
       if(line.find("IF", 0) != std::string::npos){
-        string name;
-        int j=0;
-        std::size_t found = line.find("IF");
-        name.append(line, found+3, line.length());
+        if((int)this->equIfTable.size() > 0){
+            string name,temp;
+            int j=0;
+            std::size_t found = line.find("IF");
+            name.append(line, found+3, line.length());
 
-        while(j < (int)this->equIfTable.size()){
-          if(name == this->equIfTable[j][0])break;
-          j++;
-        }
+            while(j < (int)this->equIfTable.size()){
+              if(name == this->equIfTable[j][0])break;
+              j++;
+            }
+            if(int(name[0]) == 48 || int(name[0]) == 49){
+              if(int(name[0]) == 48) temp.push_back('0');
+              else temp.push_back('1' );
+            }else temp = this->equIfTable[j][1];
 
-        string temp = this->equIfTable[j][1];
-
-        if(int(temp[0]) == 48){ // EQU 0
-          i++;
-        }
-        control = 0;
+            if(int(temp[0]) == 48){ // EQU 0
+              i++;
+            }
+            control = 0;
+          }else cout<<"[ERROR] If declaration without an previously EQU at line: " << i << endl;
       }
       if(line.find("SECTION DATA") != std::string::npos){
         this->sectionData = 1;
