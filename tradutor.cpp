@@ -10,7 +10,6 @@
 #include <cstdio>
 #include <cctype>
 #include <cstdlib>
-#include <algorithm>
 
 // GENERIC TYPE OF TOKEN: -> used in genericType
 #define MNEMONIC    1
@@ -49,7 +48,6 @@
 
 
 using namespace std;
-int error=0;
 class Compiler
 {
   public:
@@ -69,6 +67,13 @@ class Compiler
     };
     typedef struct Symbol Symbol;
 
+    std::vector<Token> tokenTable, labelTable;
+		vector<Token>::iterator data_it;
+    std::vector<Symbol> symbleTable;
+    std::vector<int> object;
+		Token token;
+
+
     void getCode(string name);
     void preprocessing();
       void getMacro(string line,int *i);
@@ -76,37 +81,45 @@ class Compiler
       void expMacro(string line, int *i, int j);
       void equIf(string line);
       string brokenLabel(string line, int *i);
-      void scaner();//lexic error
-
-        void markSintaxError(vector<Token>::iterator it);
-       	int parserMnemonic(vector<Token>::iterator it);
-        int parserDirective(vector<Token>::iterator it);
-        int parserOperand(vector<Token>::iterator it);
-        int parserConst(vector<Token>::iterator it);
-        int parserAmpersand(vector<Token>::iterator it);
-        int parserLabel(vector<Token>::iterator it);
-			void parser();//sintatic error
-
-				int duplicateLabel ();
-				int sectionPlacement ();
-				int checkSymbolsFromData();
-				int checkForDataNeed();
-				int defasLabel();
-				int invalidLabel();
-				int noLabel();
-				int labelExist();
-				int wrongSection();
-      void semanticErrorTreat();
-
+    
+		void scaner();//lexic error
+			int identify_tokens ();
+			void verify_tokens ();
+			int categorize_token();
+			int is_mnemonic();
+			int is_label();
+			int is_directive();
+			int is_operand();
+			int is_decimal();
+			int is_hexadecimal();		
+		
+		void parser();//sintatic error
+    
+      void markSintaxError(vector<Token>::iterator it);
+     	int parserMnemonic(vector<Token>::iterator it);
+      int parserDirective(vector<Token>::iterator it);
+      int parserOperand(vector<Token>::iterator it);
+      int parserConst(vector<Token>::iterator it);
+      int parserAmpersand(vector<Token>::iterator it);
+      int parserLabel(vector<Token>::iterator it);
+    
+		void semanticErrorTreat();
+			
+			int duplicateLabel ();
+			int sectionPlacement ();
+			int checkSymbolsFromData();
+			int checkForDataNeed();
+			int defasLabel();
+			int invalidLabel();
+			int noLabel();
+			int labelExist();
+			int wrongSection();
+		
     void firstPass();
     void secondPass();
 
-    void writeOutput(string name);
 
-    std::vector<Token> tokenTable, labelTable;
-		vector<Token>::iterator data_it;
-    std::vector<Symbol> symbleTable;
-    std::vector<int> object;
+    
 
     std::vector<string> codeRaw, code, temp;
     std::vector<int> originalCodeLine;
@@ -114,9 +127,8 @@ class Compiler
     string instructions[14] =
     {"ADD","SUB","MULT","DIV","JUMP","JUMPN","JUMPP","JUMPZ","COPY","LOAD","STORE","INPUT","OUTPUT","STOP"};
     int sectionData = 0, sectionText = 0, hasdatasec=0;//, error = 0;
-
 };
-
+int error=0;
 
 void Compiler::getCode(string name)
 {
@@ -460,18 +472,17 @@ void Compiler::preprocessing()
   }
 }
 
-
-//////////////////////////////////////////////////
-////////////////////////////////////// SCANER
-//////////////////////////////////////////////////
+//////////////////////////////////////////////////	T 
+////////////////////////////////////// SCANER       |
+//////////////////////////////////////////////////  V
 
 void Compiler::scaner(){
 
 }
 
-//////////////////////////////////////////////////
-////////////////////////////////////// PARSER
-//////////////////////////////////////////////////
+//////////////////////////////////////////////////	T
+////////////////////////////////////// PARSER 			|
+//////////////////////////////////////////////////  V
 
 void Compiler::markSintaxError(vector<Token>::iterator it){
   int i = it->lineNumber;
@@ -513,7 +524,7 @@ int Compiler::parserMnemonic(vector<Token>::iterator it){
 				  markSintaxError(it);
 				  error = 1;
 				  it->flag = -1;
-
+          
         }
       }
       if(it->genericType == OPERAND){  // check if valid argument.
@@ -541,13 +552,13 @@ int Compiler::parserMnemonic(vector<Token>::iterator it){
                 do{ // get out of line.
                   it++; count++;
                 }while(it != tokenTable.end() && targetLine == it->lineNumber);
-              }
+              }              
             }else{
               cerr << "Sintax Error @ Line " << targetLine << " - missing argument." << endl;
 				      markSintaxError(it);
 				      error = 1;
 				      it->flag = -1;
-            }
+            }   
           }else {
             cerr << "Sintax Error @ Line " << targetLine << " - invalid argument." << endl;
 				    markSintaxError(it);
@@ -557,7 +568,7 @@ int Compiler::parserMnemonic(vector<Token>::iterator it){
               it++; count++;
             }while(it != tokenTable.end() && targetLine == it->lineNumber);
           }
-        }
+        }        
       }else{
         cerr << "Sintax Error @ Line " << targetLine << " - invalid argument." << endl;
         markSintaxError(it);
@@ -574,7 +585,7 @@ int Compiler::parserMnemonic(vector<Token>::iterator it){
 				it->flag = -1;
     }
   break;
-
+  
   case COPY:
       it++; count++;
 			if (it != tokenTable.end() && targetLine == it->lineNumber){	// check if arguments exists.
@@ -730,7 +741,7 @@ int Compiler::parserMnemonic(vector<Token>::iterator it){
 				it->flag = -1;
 			}
   break;
-
+  
   case STOP:
     it++; count++;
     if (it != tokenTable.end() && targetLine == it->lineNumber ){ // check if too much arguments.
@@ -743,7 +754,7 @@ int Compiler::parserMnemonic(vector<Token>::iterator it){
       }while(it != tokenTable.end() && targetLine == it->lineNumber);
     }
   break;
-
+  
   default:
     cerr << "Parser: unknowm mnemonic type (" << it->token << ")." << endl;
     markSintaxError(it);
@@ -1078,7 +1089,7 @@ int Compiler::parserDirective(vector<Token>::iterator it){
 			}
 		break;*/
 
-
+		
 		/*case EQU:	// if found in this stage, it must be an invalid EQU.
 			do {		// get out of line.
 				it++; count++;
@@ -1292,25 +1303,25 @@ void Compiler::parser(){
       case MNEMONIC:
         advance(it,parserMnemonic(it));
       break;
-
+    
       case LABEL:
         advance(it,parserLabel(it));
       break;
-
+      
       case DIRECTIVE:
         advance(it,parserDirective(it));
       break;
-
+      
       /*case OPERAND:
           advance(it,parserOperand(it));
       break;*/
-
+      
       case COMMA:
       case PLUS:
       case CONST:
         advance(it,parserConst(it));
       break;
-
+      
       case AMPERSAND:
         advance(it,parserAmpersand(it));
       break;
@@ -1324,14 +1335,14 @@ void Compiler::parser(){
       break;
     }
   }
-
+  
 }
 
-//////////////////////////////////////////////////
-////////////////////////////////////// SEMANTIC ANALYSIS
-//////////////////////////////////////////////////
+//////////////////////////////////////////////////        	T
+////////////////////////////////////// SEMANTIC ANALYSIS  	|
+//////////////////////////////////////////////////          V
 
-int Compiler::duplicateLabel (){ //ALTERAR PARA FUNCIONAR CORETAMENTE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+int Compiler::duplicateLabel (){ //ALTERAR PARA FUNCIONAR CORRETAMENTE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
 	vector<Token>::iterator it, aux, end;//										T
 	int err = 0;//																						|
  //																									  			|
@@ -1351,7 +1362,7 @@ int Compiler::duplicateLabel (){ //ALTERAR PARA FUNCIONAR CORETAMENTE!!!!!!!!!!!
 			}
 	}
 	return err;
-
+	
 }
 
 int Compiler::sectionPlacement (){
@@ -1420,9 +1431,9 @@ int Compiler::checkSymbolsFromData(){
                                 if (aux2->genericType == CONST && aux2->lineNumber == data_begin->lineNumber && aux2->specificInfo <= konst){
                                     fprintf(stderr, "Semantic error @ line %d -Argument '%s' not reserved in vector '%s' in DATA section.\n", it->lineNumber, it->token.c_str(), data_begin->token.c_str());
                                     error = 1;
-                                    err++;
+                                    err++;                                    
                                 }
-
+                                
                             }
                         }
                         data_begin->flag = 100;        //marks data flags that are related to an operand
@@ -1663,15 +1674,15 @@ void Compiler::semanticErrorTreat(){
     else if (err == 0) err+=checkForDataNeed();
     //err+=defasLabel();
     err+=invalidLabel();
-    err+=noLabel();
-    err+=labelExist();
+    err+=noLabel();    
+    err+=labelExist();    
     err+=wrongSection();
 
 }
 
-//////////////////////////////////////////////////
-////////////////////////////////////// SYNTHESIS
-//////////////////////////////////////////////////
+////////////////////////////////////////////////// 	T
+////////////////////////////////////// SYNTHESIS   	|
+//////////////////////////////////////////////////  V
 
 void Compiler::firstPass(){ //done
   std::vector<Token>::iterator it;
@@ -1806,38 +1817,6 @@ void Compiler::secondPass(){ //done
   }
 }
 
-void Compiler::writeOutput(string name){
-  std::size_t found = name.find(".asm");
-  std::size_t found2 = name.find("/");
-  string extension, newName, filepre, fileobj;
-
-  extension.append(name, 0, found);
-  cout<<extension<<endl;
-  newName.append(extension, found2+1, extension.length());
-  filepre = "outputFiles/" + newName + ".pre";
-  fileobj = "outputFiles/" + newName + ".obj";
-  ofstream myfile (filepre);
-  if (myfile.is_open()){
-    for(int i=0;i < (int)this->code.size();i++){
-      myfile<<this->code[i];
-      myfile<<"\n";
-    }
-    myfile.close();
-  }else cout << "Unable to open the preprocessed file (file.pre).";
-
-  /*
-  ofstream myfile (fileobj);
-  if (myfile.is_open()){
-    for(int i=0;i < (int)this->code.size();i++){
-      myfile<<this->code[i];
-      myfile<<"\n";
-    }
-    myfile.close();
-  }else cout << "Unable to open the object file (file.obj).";
-  */
-
-}
-
 int main(int argc, char* argv[])
 {
   if(argc<0){
@@ -1855,7 +1834,5 @@ int main(int argc, char* argv[])
   if(error==1) return 0;
   com.firstPass();
   com.secondPass();
-
-  com.writeOutput(fileName);
   return 0;
 }
